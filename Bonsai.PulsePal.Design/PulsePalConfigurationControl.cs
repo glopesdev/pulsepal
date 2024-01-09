@@ -12,6 +12,7 @@ using System.Windows.Forms.Design;
 using System.IO.Ports;
 using Bonsai.IO.Design;
 using Bonsai.Design;
+using System.Drawing.Design;
 
 namespace Bonsai.PulsePal.Design
 {
@@ -33,7 +34,7 @@ namespace Bonsai.PulsePal.Design
             PulsePalManager.SaveConfiguration(pulsePalConfiguration);
         }
 
-        protected override CollectionEditor CreateConfigurationEditor(Type type)
+        protected override UITypeEditor CreateConfigurationEditor(Type type)
         {
             return new PulsePalConfigurationCollectionEditor(type);
         }
