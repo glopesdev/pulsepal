@@ -50,6 +50,7 @@ namespace Bonsai.PulsePal
                     }
 #pragma warning restore CS0612 // Type or member is obsolete
 
+                    // TODO - check fw / gen of pulse pal here and create pulse pal object using a factory
                     var pulsePal = new PulsePal(serialPortName);
                     pulsePal.Open();
                     pulsePal.SetClientId("Bonsai");
