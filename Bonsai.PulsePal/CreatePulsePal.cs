@@ -24,6 +24,13 @@ namespace Bonsai.PulsePal
             set { configuration.PortName = value; }
         }
 
+        /// <summary>
+        /// Generates an observable sequence that contains the serial connection object.
+        /// </summary>
+        /// <returns>
+        /// A sequence containing a single instance of the <see cref="PulsePal"/> class
+        /// representing the serial connection.
+        /// </returns>
         public override IObservable<PulsePal> Generate()
         {
             return Observable.Using(
