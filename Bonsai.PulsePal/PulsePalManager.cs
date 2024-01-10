@@ -6,40 +6,53 @@ using System.Xml.Serialization;
 using System.Xml;
 using System.IO;
 using System.Reactive.Disposables;
+using System.Threading.Tasks;
 
 namespace Bonsai.PulsePal
 {
-    public static class PulsePalManager
+    internal static class PulsePalManager
     {
         public const string DefaultConfigurationFile = "PulsePal.config";
         static readonly Dictionary<string, Tuple<PulsePal, RefCountDisposable>> openConnections = new Dictionary<string, Tuple<PulsePal, RefCountDisposable>>();
         static readonly object openConnectionsLock = new object();
 
-        internal static PulsePalDisposable ReserveConnection(string portName)
+        public static PulsePalDisposable ReserveConnection(string portName)
         {
-            if (string.IsNullOrEmpty(portName))
-            {
-                throw new ArgumentException("A serial port name must be specified.", "portName");
-            }
+            return ReserveConnection(portName, PulsePalConfiguration.Default);
+        }
 
-            Tuple<PulsePal, RefCountDisposable> connection;
+        public static async Task<PulsePalDisposable> ReserveConnectionAsync(string portName)
+        {
+            return await Task.Run(() => ReserveConnection(portName, PulsePalConfiguration.Default));
+        }
+
+        internal static PulsePalDisposable ReserveConnection(string portName, PulsePalConfiguration pulsePalConfiguration)
+        {
+            var connection = default(Tuple<PulsePal, RefCountDisposable>);
             lock (openConnectionsLock)
             {
-                if (!openConnections.TryGetValue(portName, out connection))
+                if (string.IsNullOrEmpty(portName))
                 {
-                    var pulsePal = new PulsePal(portName);
+                    if (!string.IsNullOrEmpty(pulsePalConfiguration.PortName)) portName = pulsePalConfiguration.PortName; // override the port name if the configuration has already provided one
+                    else if (openConnections.Count == 1) connection = openConnections.Values.Single();
+                    else throw new ArgumentException("An alias or serial port name must be specified.", nameof(portName));
+                }
+
+                if (connection == null && !openConnections.TryGetValue(portName, out connection)) {
+                    var serialPortName = pulsePalConfiguration.PortName;
+                    if (string.IsNullOrEmpty(serialPortName)) serialPortName = portName;
+
+#pragma warning disable CS0612 // Type or member is obsolete
+                    var configuration = LoadConfiguration();
+                    if (configuration.Contains(serialPortName))
+                    {
+                        pulsePalConfiguration = configuration[serialPortName];
+                    }
+#pragma warning restore CS0612 // Type or member is obsolete
+
+                    var pulsePal = new PulsePal(serialPortName);
                     pulsePal.Open();
                     pulsePal.SetClientId("Bonsai");
-                    var configuration = LoadConfiguration();
-                    if (configuration.Contains(portName))
-                    {
-                        var pulsePalConfiguration = configuration[portName];
-                        foreach (var parameter in pulsePalConfiguration.ChannelParameters)
-                        {
-                            pulsePal.ProgramParameter(parameter.Channel, parameter.ParameterCode, parameter.Value);
-                        }
-                    }
-
                     var dispose = Disposable.Create(() =>
                     {
                         pulsePal.Close();
@@ -56,6 +69,7 @@ namespace Bonsai.PulsePal
             return new PulsePalDisposable(connection.Item1, connection.Item2.GetDisposable());
         }
 
+        [Obsolete]
         public static PulsePalConfigurationCollection LoadConfiguration()
         {
             if (!File.Exists(DefaultConfigurationFile))
