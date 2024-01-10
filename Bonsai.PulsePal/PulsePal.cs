@@ -8,7 +8,7 @@ using System.IO;
 
 namespace Bonsai.PulsePal
 {
-    sealed class PulsePal : IDisposable
+    public sealed class PulsePal : IDisposable
     {
         public const int BaudRate = 115200;
         const int MaxDataBytes = 35;
