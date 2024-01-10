@@ -34,7 +34,7 @@ namespace Bonsai.PulsePal
         public override IObservable<PulsePal> Generate()
         {
             return Observable.Using(
-                () => PulsePalManager.ReserveConnection(configuration.PortName),
+                () => PulsePalManager.ReserveConnection(Name, configuration),
                 resource =>
                 {
                     return Observable.Return(resource.PulsePal)
