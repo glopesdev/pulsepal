@@ -7,7 +7,7 @@ using System.Reactive.Disposables;
 
 namespace Bonsai.PulsePal
 {
-    sealed class PulsePalDisposable : ICancelable, IDisposable
+    public sealed class PulsePalDisposable : ICancelable, IDisposable
     {
         IDisposable resource;
 
