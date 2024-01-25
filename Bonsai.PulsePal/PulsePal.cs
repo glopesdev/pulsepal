@@ -194,8 +194,9 @@ namespace Bonsai.PulsePal
             if (!string.IsNullOrEmpty(row2))
             {
                 commandBuffer[index++] = LineBreak;
-                WriteText(row2, index);
+                index = WriteText(row2, index);
             }
+            serialPort.Write(commandBuffer, 0, index+1);
         }
 
         public void SetFixedVoltage(byte channel, byte voltage)
