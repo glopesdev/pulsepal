@@ -24,6 +24,12 @@ namespace Bonsai.PulsePal
             set { configuration.PortName = value; }
         }
 
+        [Description("The collection of channel parameters used to configure the Pulse Pal.")]
+        public ChannelParameterCollection ChannelParameters
+        {
+            get { return configuration.ChannelParameters; }
+        }
+
         /// <summary>
         /// Generates an observable sequence that contains the serial connection object.
         /// </summary>
