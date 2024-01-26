@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Bonsai.IO;
+using Bonsai.IO.Ports;
 
 namespace Bonsai.PulsePal
 {
