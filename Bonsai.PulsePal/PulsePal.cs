@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO.Ports;
-using System.Threading;
 using System.IO;
 
 namespace Bonsai.PulsePal
 {
-    sealed class PulsePal : IDisposable
+    public sealed class PulsePal : IDisposable
     {
         public const int BaudRate = 115200;
         const int MaxDataBytes = 35;

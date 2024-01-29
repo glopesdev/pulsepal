@@ -1,17 +1,12 @@
-﻿using Bonsai.IO;
-using OpenCV.Net;
+﻿using OpenCV.Net;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Bonsai.PulsePal
 {
-    [Description("Uploads a custom pulse train to the PulsePal.")]
+    [Description("Uploads a custom pulse train to the Pulse Pal.")]
     public class UpdatePulseTrain : Sink<Mat>
     {
         const int CycleTimeMicroseconds = 50;

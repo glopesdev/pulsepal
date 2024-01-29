@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Bonsai.IO;
-using System.Collections.ObjectModel;
 
 namespace Bonsai.PulsePal
 {
     public class PulsePalConfiguration
     {
+        internal static readonly PulsePalConfiguration Default = new PulsePalConfiguration();
+
         readonly ChannelParameterCollection channelParameters = new ChannelParameterCollection();
 
         [Description("The name of the serial port.")]
