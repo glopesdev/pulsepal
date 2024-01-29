@@ -6,11 +6,12 @@ using Bonsai.IO.Ports;
 
 namespace Bonsai.PulsePal
 {
+    [Description("Creates and configures a serial connection to a Pulse Pal device.")]
     public class CreatePulsePal : Source<PulsePal>, INamedElement
     {
         readonly PulsePalConfiguration configuration = new PulsePalConfiguration();
 
-        [Description("The optional alias for the Pulse Pal.")]
+        [Description("The optional alias for the Pulse Pal device.")]
         public string Name { get; set; }
 
         [TypeConverter(typeof(SerialPortNameConverter))]

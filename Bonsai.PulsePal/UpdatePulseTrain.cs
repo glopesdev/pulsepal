@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 
 namespace Bonsai.PulsePal
 {
-    [Description("Uploads a custom pulse train to the PulsePal.")]
+    [Description("Uploads a custom pulse train to the Pulse Pal.")]
     public class UpdatePulseTrain : Sink<Mat>
     {
         const int CycleTimeMicroseconds = 50;
