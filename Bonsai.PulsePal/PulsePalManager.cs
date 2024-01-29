@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace Bonsai.PulsePal
 {
-    internal static class PulsePalManager
+    public static class PulsePalManager
     {
         public const string DefaultConfigurationFile = "PulsePal.config";
         static readonly Dictionary<string, Tuple<PulsePal, RefCountDisposable>> openConnections = new Dictionary<string, Tuple<PulsePal, RefCountDisposable>>();
         static readonly object openConnectionsLock = new object();
 
-        public static PulsePalDisposable ReserveConnection(string portName)
+        internal static PulsePalDisposable ReserveConnection(string portName)
         {
             return ReserveConnection(portName, PulsePalConfiguration.Default);
         }
 
-        public static async Task<PulsePalDisposable> ReserveConnectionAsync(string portName)
+        internal static async Task<PulsePalDisposable> ReserveConnectionAsync(string portName)
         {
             return await Task.Run(() => ReserveConnection(portName, PulsePalConfiguration.Default));
         }
@@ -32,12 +32,13 @@ namespace Bonsai.PulsePal
             {
                 if (string.IsNullOrEmpty(portName))
                 {
-                    if (!string.IsNullOrEmpty(pulsePalConfiguration.PortName)) portName = pulsePalConfiguration.PortName; // override the port name if the configuration has already provided one
+                    if (!string.IsNullOrEmpty(pulsePalConfiguration.PortName)) portName = pulsePalConfiguration.PortName;
                     else if (openConnections.Count == 1) connection = openConnections.Values.Single();
                     else throw new ArgumentException("An alias or serial port name must be specified.", nameof(portName));
                 }
 
-                if (connection == null && !openConnections.TryGetValue(portName, out connection)) {
+                if (connection == null && !openConnections.TryGetValue(portName, out connection))
+                {
                     var serialPortName = pulsePalConfiguration.PortName;
                     if (string.IsNullOrEmpty(serialPortName)) serialPortName = portName;
 
