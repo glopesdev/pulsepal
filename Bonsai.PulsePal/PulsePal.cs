@@ -123,6 +123,14 @@ namespace Bonsai.PulsePal
             serialPort.Write(commandBuffer, 0, 2);
         }
 
+        public int HandshakeForVersion()
+        {
+            Connect();
+            serialPort.Read(readBuffer, 0, 5); // Read 5 bytes after handshake, ack character followed by 
+            int firmwareBuild = BitConverter.ToInt32(readBuffer, 1);
+            return firmwareBuild;
+        }
+
         void Disconnect()
         {
             commandBuffer[0] = OpMenu;
@@ -288,6 +296,7 @@ namespace Bonsai.PulsePal
             MinorVersion = minorVersion;
         }
 
+        // TODO - Process input could be extended to allow for byte[], e.g. for handshake returns like K20 etc.
         void ProcessInput(byte inputData)
         {
             if (!initialized && inputData != Acknowledge)

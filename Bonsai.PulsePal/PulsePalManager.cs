@@ -53,6 +53,9 @@ namespace Bonsai.PulsePal
                     var pulsePal = new PulsePal(serialPortName);
                     pulsePal.Open();
                     pulsePal.SetClientId("Bonsai");
+
+                    int firmwareVersion = pulsePal.HandshakeForVersion();
+
                     var dispose = Disposable.Create(() =>
                     {
                         pulsePal.Close();
