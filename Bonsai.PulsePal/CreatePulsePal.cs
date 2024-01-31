@@ -14,6 +14,9 @@ namespace Bonsai.PulsePal
         [Description("The optional alias for the Pulse Pal device.")]
         public string Name { get; set; }
 
+        [Description("The model id of the Pulse Pal device.")]
+        public PulsePal.PulsePalModel Model { get; set; }
+
         [TypeConverter(typeof(SerialPortNameConverter))]
         [Description("The name of the serial port used to communicate with the Pulse Pal.")]
         public string PortName

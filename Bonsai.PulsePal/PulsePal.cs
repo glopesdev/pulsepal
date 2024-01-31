@@ -33,6 +33,12 @@ namespace Bonsai.PulsePal
         readonly byte[] commandBuffer;
         readonly byte[] readBuffer;
 
+        public enum PulsePalModel : byte
+        {
+            PulsePalGen1 = 1,
+            PulsePalGen2 = 2
+        }
+
         public PulsePal(string portName)
         {
             serialPort = new SerialPort(portName);
@@ -48,9 +54,27 @@ namespace Bonsai.PulsePal
             readBuffer = new byte[serialPort.ReadBufferSize];
         }
 
+        public PulsePal(string portName, PulsePalModel model)
+        {
+            serialPort = new SerialPort(portName);
+            serialPort.BaudRate = BaudRate;
+            serialPort.DataBits = 8;
+            serialPort.StopBits = StopBits.One;
+            serialPort.Parity = Parity.None;
+            serialPort.DtrEnable = false;
+            serialPort.RtsEnable = true;
+
+            Model = model;
+
+            responseBuffer = new byte[4];
+            commandBuffer = new byte[MaxDataBytes];
+            readBuffer = new byte[serialPort.ReadBufferSize];
+        }
+
         public int MajorVersion { get; private set; }
 
         public int MinorVersion { get; private set; }
+        public PulsePalModel Model { get; private set; } = PulsePalModel.PulsePalGen1;
 
         public bool IsOpen
         {
@@ -126,7 +150,7 @@ namespace Bonsai.PulsePal
         public int HandshakeForVersion()
         {
             Connect();
-            serialPort.Read(readBuffer, 0, 5); // Read 5 bytes after handshake, ack character followed by 
+            serialPort.Read(readBuffer, 0, 5); // Read 5 bytes after handshake, ack character followed by 32-bit int.
             int firmwareBuild = BitConverter.ToInt32(readBuffer, 1);
             return firmwareBuild;
         }
