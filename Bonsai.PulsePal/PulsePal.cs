@@ -38,6 +38,13 @@ namespace Bonsai.PulsePal
         readonly byte[] commandBuffer;
         readonly byte[] readBuffer;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PulsePal"/> class using
+        /// the specified port name.
+        /// </summary>
+        /// <param name="portName">
+        /// The name of the serial port used to communicate with the Pulse Pal device.
+        /// </param>
         public PulsePal(string portName)
         {
             serialPort = new SerialPort(portName);
@@ -54,11 +61,17 @@ namespace Bonsai.PulsePal
             readBuffer = new byte[serialPort.ReadBufferSize];
         }
 
+        /// <summary>
+        /// Gets the version of the firmware used by the Pulse Pal device.
+        /// </summary>
         public int FirmwareVersion
         {
             get { return firmwareVersion; }
         }
 
+        /// <summary>
+        /// Gets a value indicating the open or closed status of the <see cref="PulsePal"/> object.
+        /// </summary>
         public bool IsOpen
         {
             get { return serialPort.IsOpen && initialized.IsCompleted; }
@@ -167,91 +180,241 @@ namespace Bonsai.PulsePal
             writer.Write(DisconnectCommand);
         }
 
+        /// <summary>
+        /// Sets the specified output channel to produce either monophasic
+        /// or biphasic square pulses.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="isBiphasic">
+        /// <see langword="true"/> to produce biphasic pulses;
+        /// <see langword="false"/> to produce monophasic pulses.
+        /// </param>
         public void SetBiphasic(PulsePalChannel channel, bool isBiphasic)
         {
             ProgramParameter(channel, ParameterCode.Biphasic, isBiphasic);
         }
 
+        /// <summary>
+        /// Sets the voltage for the first phase of each pulse on a specified
+        /// output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="volts">
+        /// The voltage of the first phase of the pulse, in the range [-10, 10] volts.
+        /// </param>
         public void SetPhase1Voltage(PulsePalChannel channel, double volts)
         {
             ProgramParameterVoltage(channel, ParameterCode.Phase1Voltage, volts);
         }
 
+        /// <summary>
+        /// Sets the voltage for the second phase of each pulse on a specified
+        /// output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="volts">
+        /// The voltage of the second phase of the pulse, in the range [-10, 10] volts.
+        /// </param>
         public void SetPhase2Voltage(PulsePalChannel channel, double volts)
         {
             ProgramParameterVoltage(channel, ParameterCode.Phase2Voltage, volts);
         }
 
+        /// <summary>
+        /// Sets the duration for the first phase of each pulse on a specified
+        /// output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="seconds">
+        /// The duration of the first phase of the pulse, in the range
+        /// [0.0001, 3600] seconds.
+        /// </param>
         public void SetPhase1Duration(PulsePalChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.Phase1Duration, seconds);
         }
 
+        /// <summary>
+        /// Sets the interval between the first and second phases of biphasic pulses
+        /// on a specified output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="seconds">
+        /// The interval between the first and second phase of a biphasic pulse,
+        /// in the range [0.0001, 3600] seconds.
+        /// </param>
         public void SetInterPhaseInterval(PulsePalChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.InterPhaseInterval, seconds);
         }
 
+        /// <summary>
+        /// Sets the duration for the second phase of each pulse on a specified
+        /// output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="seconds">
+        /// The duration of the second phase of the pulse, in the range
+        /// [0.0001, 3600] seconds.
+        /// </param>
         public void SetPhase2Duration(PulsePalChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.Phase2Duration, seconds);
         }
 
+        /// <summary>
+        /// Sets the interval between pulses on a specified output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="seconds">
+        /// The interval between pulses, in the range [0.0001, 3600] seconds.
+        /// </param>
         public void SetInterPulseInterval(PulsePalChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.InterPulseInterval, seconds);
         }
 
+        /// <summary>
+        /// Sets the duration of a pulse burst when using burst mode.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="seconds">
+        /// The duration of a pulse burst, in the range [0.0001, 3600] seconds.
+        /// Burst mode is automatically disabled if this value is set to zero.
+        /// </param>
         public void SetBurstDuration(PulsePalChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.BurstDuration, seconds);
         }
 
+        /// <summary>
+        /// Sets the duration of the off-time between bursts.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="seconds">
+        /// The duration of the off-time between bursts, in the range
+        /// [0.0001, 3600] seconds.
+        /// </param>
         public void SetInterBurstInterval(PulsePalChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.InterBurstInterval, seconds);
         }
 
+        /// <summary>
+        /// Sets the duration of the entire pulse train.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="seconds">
+        /// The duration of the pulse train, in the range [0.0001, 3600] seconds.
+        /// </param>
         public void SetPulseTrainDuration(PulsePalChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.PulseTrainDuration, seconds);
         }
 
+        /// <summary>
+        /// Sets a delay between the arrival of a trigger and when the channel
+        /// begins its pulse train.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="seconds">
+        /// The delay to start the pulse train, in the range [0.0001, 3600] seconds.
+        /// </param>
         public void SetPulseTrainDelay(PulsePalChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.PulseTrainDelay, seconds);
         }
 
+        /// <summary>
+        /// Links or unlinks an output channel to trigger channel 1.
+        /// </summary>
+        /// <param name="channel">The output channel to link or unlink.</param>
+        /// <param name="enabled">
+        /// <see langword="true"/> if trigger channel 1 can trigger this output channel;
+        /// <see langword="false"/> otherwise.
+        /// </param>
         public void SetTriggerOnChannel1(PulsePalChannel channel, bool enabled)
         {
             ProgramParameter(channel, ParameterCode.TriggerOnChannel1, enabled);
         }
 
+        /// <summary>
+        /// Links or unlinks an output channel to trigger channel 2.
+        /// </summary>
+        /// <param name="channel">The output channel to link or unlink.</param>
+        /// <param name="enabled">
+        /// <see langword="true"/> if trigger channel 2 can trigger this output channel;
+        /// <see langword="false"/> otherwise.
+        /// </param>
         public void SetTriggerOnChannel2(PulsePalChannel channel, bool enabled)
         {
             ProgramParameter(channel, ParameterCode.TriggerOnChannel2, enabled);
         }
 
-        public void SetCustomTrainIdentity(PulsePalChannel channel, CustomTrainId identity)
+        /// <summary>
+        /// Sets the identity of the custom train used to specify pulse times and
+        /// voltages on an output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="trainId">
+        /// The identity of the custom pulse train to use on the specified
+        /// output channel.
+        /// </param>
+        public void SetCustomTrainIdentity(PulsePalChannel channel, CustomTrainId trainId)
         {
-            ProgramParameter(channel, ParameterCode.CustomTrainIdentity, (byte)identity);
+            ProgramParameter(channel, ParameterCode.CustomTrainIdentity, (byte)trainId);
         }
 
+        /// <summary>
+        /// Sets the interpretation of pulse times in the custom train configured
+        /// on the specified output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="target">
+        /// The interpretation of pulse times in the custom pulse train.
+        /// </param>
         public void SetCustomTrainTarget(PulsePalChannel channel, CustomTrainTarget target)
         {
             ProgramParameter(channel, ParameterCode.CustomTrainTarget, (byte)target);
         }
 
+        /// <summary>
+        /// Sets an output channel to loop its custom pulse train.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="loop">
+        /// <see langword="true"/> if the output channel should loop its custom pulse train
+        /// for the duration specified by <see cref="SetPulseTrainDuration"/>; otherwise,
+        /// the pulse train ends after its final pulse.
+        /// </param>
         public void SetCustomTrainLoop(PulsePalChannel channel, bool loop)
         {
             ProgramParameter(channel, ParameterCode.CustomTrainLoop, loop);
         }
 
+        /// <summary>
+        /// Sets the resting voltage on a specified output channel, i.e. the voltage
+        /// between phases, pulses and pulse trains.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="volts">
+        /// The resting voltage, in the range [-10, 10] volts.
+        /// </param>
         public void SetRestingVoltage(PulsePalChannel channel, double volts)
         {
             ProgramParameterVoltage(channel, ParameterCode.RestingVoltage, volts);
         }
 
+        /// <summary>
+        /// Sets the behavior of a trigger channel.
+        /// </summary>
+        /// <param name="channel">
+        /// The trigger channel to configure. Currently, only channels 1 or 2
+        /// can be used as triggers.
+        /// </param>
+        /// <param name="triggerMode">
+        /// Specifies the behavior of the trigger channel.
+        /// </param>
         public void SetTriggerMode(PulsePalChannel channel, TriggerMode triggerMode)
         {
             ProgramParameter(channel, ParameterCode.TriggerMode, (byte)triggerMode);
@@ -285,6 +448,28 @@ namespace Bonsai.PulsePal
             writer.WriteTime(seconds);
         }
 
+        /// <summary>
+        /// Sends a sequence of onset times and voltages describing a train of pulses.
+        /// </summary>
+        /// <param name="id">The identity of the custom pulse train to program.</param>
+        /// <param name="pulseTimes">The array of pulse onset times, in seconds.</param>
+        /// <param name="pulseVoltages">The array of pulse voltages, with one voltage per pulse.</param>
+        /// <exception cref="ArgumentException">
+        /// The specified pulse train <paramref name="id"/> is invalid.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// Either <paramref name="pulseTimes"/> or <paramref name="pulseVoltages"/> is
+        /// <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// The maximum length of 1,000 pulses has been exceeded.
+        /// </exception>
+        /// <remarks>
+        /// Pulses that are continuous or overlapping will merge. If an output channel is set
+        /// to produce biphasic pulses, the voltage specified for each pulse is sign-inverted
+        /// for the second phase, i.e. if +5 V is used for phase 1, -5 V is used automatically
+        /// for phase 2.
+        /// </remarks>
         public void SendCustomPulseTrain(CustomTrainId id, double[] pulseTimes, double[] pulseVoltages)
         {
             var command = id switch
@@ -336,6 +521,12 @@ namespace Bonsai.PulsePal
             }
         }
 
+        /// <summary>
+        /// Begins the stimulation pulse train on the specified output channels.
+        /// </summary>
+        /// <param name="channels">
+        /// Specifies which output channels to start.
+        /// </param>
         public void TriggerChannels(TriggerChannels channels)
         {
             using var writer = new CommandWriter(this);
@@ -344,11 +535,29 @@ namespace Bonsai.PulsePal
             writer.Write((byte)channels);
         }
 
+        /// <summary>
+        /// Writes a text string to the Pulse Pal oLED display.
+        /// </summary>
+        /// <param name="text">
+        /// A text string to display on the top row of the oLED display.
+        /// Text must be less than 17 characters in length.
+        /// </param>
         public void UpdateDisplay(string text)
         {
             UpdateDisplay(text, string.Empty);
         }
 
+        /// <summary>
+        /// Writes text strings to the Pulse Pal oLED display.
+        /// </summary>
+        /// <param name="row1">
+        /// A text string to display on the top row of the oLED display.
+        /// Text must be less than 17 characters in length.
+        /// </param>
+        /// <param name="row2">
+        /// An optional text string to display on the bottom row of the oLED display.
+        /// Text must be less than 17 characters in length.
+        /// </param>
         public void UpdateDisplay(string row1, string row2)
         {
             const int MaxDisplayCharacters = 16;
@@ -370,6 +579,13 @@ namespace Bonsai.PulsePal
             writer.Write(message);
         }
 
+        /// <summary>
+        /// Sets a constant voltage on an output channel.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="volts">
+        /// The voltage to set on the output channel, in the range [-10, 10] volts.
+        /// </param>
         public void SetFixedVoltage(PulsePalChannel channel, double volts)
         {
             using var writer = new CommandWriter(this);
@@ -379,6 +595,9 @@ namespace Bonsai.PulsePal
             writer.WriteVoltage(volts);
         }
 
+        /// <summary>
+        /// Terminates all pulse trains currently playing on the device.
+        /// </summary>
         public void AbortPulseTrains()
         {
             using var writer = new CommandWriter(this);
@@ -386,6 +605,15 @@ namespace Bonsai.PulsePal
             writer.Write(AbortCommand);
         }
 
+        /// <summary>
+        /// Sets an output channel to play its pulse train indefinitely when triggered,
+        /// without needing to be re-triggered.
+        /// </summary>
+        /// <param name="channel">The output channel to configure.</param>
+        /// <param name="loop">
+        /// <see langword="true"/> to set the output channel in continuous loop mode;
+        /// <see langword="false"/> otherwise.
+        /// </param>
         public void SetContinuousLoop(PulsePalChannel channel, bool loop)
         {
             using var writer = new CommandWriter(this);
@@ -395,6 +623,14 @@ namespace Bonsai.PulsePal
             writer.Write(loop);
         }
 
+        /// <summary>
+        /// Sets a 6-character string to indicate the connected application's name,
+        /// at the top of the PulsePal's thumb joystick menu tree.
+        /// </summary>
+        /// <param name="id">
+        /// A text string identifying the connected application. The text must be
+        /// 6 or less characters in length.
+        /// </param>
         public void SetClientId(string id)
         {
             using var writer = new CommandWriter(this);
@@ -406,15 +642,15 @@ namespace Bonsai.PulsePal
             }
         }
 
+        /// <summary>
+        /// Closes the port connection, sets the <see cref="IsOpen"/>
+        /// property to <see langword="false"/> and disposes of the
+        /// internal <see cref="SerialPort"/> object.
+        /// </summary>
         public void Close()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        }
-
-        ~PulsePal()
-        {
-            Dispose(false);
         }
 
         private void Dispose(bool disposing)

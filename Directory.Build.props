@@ -4,13 +4,13 @@
     <Authors>Bonsai Foundation</Authors>
     <Copyright>Copyright © Bonsai Foundation CIC and Contributors 2015-2024</Copyright>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <ProjectUrl>https://github.com/bonsai-rx/pulsepal</ProjectUrl>
     <PackageLicenseUrl>https://bonsai-rx.org/license</PackageLicenseUrl>
     <PackageIconUrl>https://bonsai-rx.org/assets/images/bonsai.png</PackageIconUrl>
     <PackageOutputPath>..\bin\$(Configuration)</PackageOutputPath>
     <IncludeSymbols Condition="'$(Configuration)'=='Release'">true</IncludeSymbols>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
-    <GenerateDocumentationFile Condition="'$(Configuration)'=='Release'">true</GenerateDocumentationFile>
     <RepositoryUrl>https://github.com/bonsai-rx/pulsepal.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <VersionSuffix></VersionSuffix>
