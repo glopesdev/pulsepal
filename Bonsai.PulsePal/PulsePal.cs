@@ -2,12 +2,13 @@
 using System.IO.Ports;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Reactive.Subjects;
 
 namespace Bonsai.PulsePal
 {
     public sealed class PulsePal : IDisposable
     {
-        public const int BaudRate = 115200;
+        const int BaudRate = 115200;
         const int CycleFrequency = 20000;
         const int MaxCyclePeriod = 36000000;
         const int MaxPulseLength = 1000;
@@ -30,9 +31,9 @@ namespace Bonsai.PulsePal
         const byte LineBreak             = 254;
 
         bool disposed;
-        bool initialized;
         int firmwareVersion;
         int dacMaxValue;
+        readonly AsyncSubject<bool> initialized;
         readonly SerialPort serialPort;
         readonly byte[] commandBuffer;
         readonly byte[] readBuffer;
@@ -47,6 +48,8 @@ namespace Bonsai.PulsePal
             serialPort.DtrEnable = false;
             serialPort.RtsEnable = true;
 
+            firmwareVersion = -1;
+            initialized = new();
             commandBuffer = new byte[MaxDataBytes];
             readBuffer = new byte[serialPort.ReadBufferSize];
         }
@@ -58,7 +61,7 @@ namespace Bonsai.PulsePal
 
         public bool IsOpen
         {
-            get { return serialPort.IsOpen; }
+            get { return serialPort.IsOpen && initialized.IsCompleted; }
         }
 
         Task RunAsync(CancellationToken cancellationToken)
@@ -94,10 +97,14 @@ namespace Bonsai.PulsePal
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
+                            if (!initialized.IsCompleted)
+                            {
+                                initialized.OnError(ex);
+                            }
                             throw;
                         }
                         break;
@@ -118,6 +125,7 @@ namespace Bonsai.PulsePal
         public void Open(CancellationToken cancellationToken = default)
         {
             RunAsync(cancellationToken);
+            initialized.GetResult();
         }
 
         void Connect()
@@ -129,7 +137,7 @@ namespace Bonsai.PulsePal
 
         int ProcessResponse(int count)
         {
-            if (!initialized)
+            if (!initialized.IsCompleted)
             {
                 const int ResponseLength = 5;
                 if (count < ResponseLength) return 0;
@@ -145,7 +153,8 @@ namespace Bonsai.PulsePal
                     < 40 => ushort.MaxValue,
                     _ => throw new InvalidOperationException($"Unknown Pulse Pal firmware version {firmwareVersion}.")
                 };
-                initialized = true;
+                initialized.OnNext(true);
+                initialized.OnCompleted();
                 return ResponseLength;
             }
             else return count;
@@ -416,6 +425,7 @@ namespace Bonsai.PulsePal
                 {
                     Disconnect();
                     serialPort.Close();
+                    initialized.Dispose();
                     disposed = true;
                 }
             }
