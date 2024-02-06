@@ -23,7 +23,7 @@ namespace Bonsai.PulsePal
                 {
                     lock (pulsePal.PulsePal)
                     {
-                        pulsePal.PulsePal.TriggerOutputChannels(Channels);
+                        pulsePal.PulsePal.TriggerChannels((TriggerChannels)Channels);
                     }
                 }));
         }
