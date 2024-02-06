@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO.Ports;
-using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -9,27 +8,32 @@ namespace Bonsai.PulsePal
     public sealed class PulsePal : IDisposable
     {
         public const int BaudRate = 115200;
+        const int CycleFrequency = 20000;
+        const int MaxCyclePeriod = 36000000;
+        const int MaxPulseLength = 1000;
         const int MaxDataBytes = 35;
 
-        const byte Acknowledge           = 0x4B;
-        const byte OpMenu                = 0xD5;
-        const byte HandshakeCommand      = 0x48;
-        const byte ProgramParamCommand   = 0x4A;
-        const byte PulseTrain1Command    = 0x4B;
-        const byte PulseTrain2Command    = 0x4C;
-        const byte TriggerCommand        = 0x4D;
-        const byte SetDisplayCommand     = 0x4E;
-        const byte SetVoltageCommand     = 0x4F;
-        const byte AbortCommand          = 0x50;
-        const byte DisconnectCommand     = 0x51;
-        const byte LoopCommand           = 0x52;
-        const byte ClientIdCommand       = 0x59;
-        const byte LineBreak             = 0xFE;
+        const byte OpMenu                = 213;
+        const byte Handshake             = 72;
+        const byte Acknowledge           = 75;
+
+        const byte ProgramParam          = 74;
+        const byte ProgramPulseTrain1    = 75;
+        const byte ProgramPulseTrain2    = 76;
+        const byte TriggerCommand        = 77;
+        const byte UpdateDisplayCommand  = 78;
+        const byte SetVoltageCommand     = 79;
+        const byte AbortCommand          = 80;
+        const byte DisconnectCommand     = 81;
+        const byte LoopCommand           = 82;
+        const byte ClientIdCommand       = 89;
+        const byte LineBreak             = 254;
 
         bool disposed;
         bool initialized;
+        int firmwareVersion;
+        int dacMaxValue;
         readonly SerialPort serialPort;
-        readonly byte[] responseBuffer;
         readonly byte[] commandBuffer;
         readonly byte[] readBuffer;
 
@@ -43,14 +47,14 @@ namespace Bonsai.PulsePal
             serialPort.DtrEnable = false;
             serialPort.RtsEnable = true;
 
-            responseBuffer = new byte[4];
             commandBuffer = new byte[MaxDataBytes];
             readBuffer = new byte[serialPort.ReadBufferSize];
         }
 
-        public int MajorVersion { get; private set; }
-
-        public int MinorVersion { get; private set; }
+        public int FirmwareVersion
+        {
+            get { return firmwareVersion; }
+        }
 
         public bool IsOpen
         {
@@ -65,6 +69,7 @@ namespace Bonsai.PulsePal
 
             return Task.Factory.StartNew(() =>
             {
+                var offset = 0;
                 using var cancellation = cancellationToken.Register(serialPort.Dispose);
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -73,20 +78,19 @@ namespace Bonsai.PulsePal
                         var bytesToRead = serialPort.BytesToRead;
                         if (bytesToRead == 0)
                         {
-                            var nextByte = serialPort.ReadByte();
+                            var nextByte = (byte)serialPort.ReadByte();
                             if (nextByte < 0) break;
-                            ProcessInput((byte)nextByte);
+                            readBuffer[offset++] = nextByte;
+                            offset -= ProcessResponse(offset);
                         }
                         else
                         {
                             while (bytesToRead > 0)
                             {
-                                var bytesRead = serialPort.Read(readBuffer, 0, Math.Min(bytesToRead, readBuffer.Length));
-                                for (int i = 0; i < bytesRead; i++)
-                                {
-                                    ProcessInput(readBuffer[i]);
-                                }
+                                var bytesRead = serialPort.Read(readBuffer, offset, Math.Min(bytesToRead, readBuffer.Length - offset));
                                 bytesToRead -= bytesRead;
+                                offset += bytesRead;
+                                offset -= ProcessResponse(offset);
                             }
                         }
                     }
@@ -118,190 +122,278 @@ namespace Bonsai.PulsePal
 
         void Connect()
         {
-            commandBuffer[0] = OpMenu;
-            commandBuffer[1] = HandshakeCommand;
-            serialPort.Write(commandBuffer, 0, 2);
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(Handshake);
+        }
+
+        int ProcessResponse(int count)
+        {
+            if (!initialized)
+            {
+                const int ResponseLength = 5;
+                if (count < ResponseLength) return 0;
+                if (readBuffer[0] != Acknowledge)
+                {
+                    throw new InvalidOperationException("Unexpected return value from Pulse Pal.");
+                }
+
+                firmwareVersion = BitConverter.ToInt32(readBuffer, 1);
+                dacMaxValue = firmwareVersion switch
+                {
+                    < 20 => byte.MaxValue,
+                    < 40 => ushort.MaxValue,
+                    _ => throw new InvalidOperationException($"Unknown Pulse Pal firmware version {firmwareVersion}.")
+                };
+                initialized = true;
+                return ResponseLength;
+            }
+            else return count;
         }
 
         void Disconnect()
         {
-            commandBuffer[0] = OpMenu;
-            commandBuffer[1] = DisconnectCommand;
-            serialPort.Write(commandBuffer, 0, 2);
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(DisconnectCommand);
         }
 
-        void WriteInt(BinaryWriter writer, int value)
+        public void SetBiphasic(PulsePalChannel channel, bool isBiphasic)
         {
-            writer.Write((byte)value);
-            writer.Write((byte)(value >> 8));
-            writer.Write((byte)(value >> 16));
-            writer.Write((byte)(value >> 24));
+            ProgramParameter(channel, ParameterCode.Biphasic, isBiphasic);
         }
 
-        public void ProgramParameter(int channel, ParameterCode parameter, int value)
+        public void SetPhase1Voltage(PulsePalChannel channel, double volts)
         {
-            using (var stream = new MemoryStream(commandBuffer))
-            using (var writer = new BinaryWriter(stream))
+            ProgramParameterVoltage(channel, ParameterCode.Phase1Voltage, volts);
+        }
+
+        public void SetPhase2Voltage(PulsePalChannel channel, double volts)
+        {
+            ProgramParameterVoltage(channel, ParameterCode.Phase2Voltage, volts);
+        }
+
+        public void SetPhase1Duration(PulsePalChannel channel, double seconds)
+        {
+            ProgramParameterTime(channel, ParameterCode.Phase1Duration, seconds);
+        }
+
+        public void SetInterPhaseInterval(PulsePalChannel channel, double seconds)
+        {
+            ProgramParameterTime(channel, ParameterCode.InterPhaseInterval, seconds);
+        }
+
+        public void SetPhase2Duration(PulsePalChannel channel, double seconds)
+        {
+            ProgramParameterTime(channel, ParameterCode.Phase2Duration, seconds);
+        }
+
+        public void SetInterPulseInterval(PulsePalChannel channel, double seconds)
+        {
+            ProgramParameterTime(channel, ParameterCode.InterPulseInterval, seconds);
+        }
+
+        public void SetBurstDuration(PulsePalChannel channel, double seconds)
+        {
+            ProgramParameterTime(channel, ParameterCode.BurstDuration, seconds);
+        }
+
+        public void SetInterBurstInterval(PulsePalChannel channel, double seconds)
+        {
+            ProgramParameterTime(channel, ParameterCode.InterBurstInterval, seconds);
+        }
+
+        public void SetPulseTrainDuration(PulsePalChannel channel, double seconds)
+        {
+            ProgramParameterTime(channel, ParameterCode.PulseTrainDuration, seconds);
+        }
+
+        public void SetPulseTrainDelay(PulsePalChannel channel, double seconds)
+        {
+            ProgramParameterTime(channel, ParameterCode.PulseTrainDelay, seconds);
+        }
+
+        public void SetTriggerOnChannel1(PulsePalChannel channel, bool enabled)
+        {
+            ProgramParameter(channel, ParameterCode.TriggerOnChannel1, enabled);
+        }
+
+        public void SetTriggerOnChannel2(PulsePalChannel channel, bool enabled)
+        {
+            ProgramParameter(channel, ParameterCode.TriggerOnChannel2, enabled);
+        }
+
+        public void SetCustomTrainIdentity(PulsePalChannel channel, CustomTrainId identity)
+        {
+            ProgramParameter(channel, ParameterCode.CustomTrainIdentity, (byte)identity);
+        }
+
+        public void SetCustomTrainTarget(PulsePalChannel channel, CustomTrainTarget target)
+        {
+            ProgramParameter(channel, ParameterCode.CustomTrainTarget, (byte)target);
+        }
+
+        public void SetCustomTrainLoop(PulsePalChannel channel, bool loop)
+        {
+            ProgramParameter(channel, ParameterCode.CustomTrainLoop, loop);
+        }
+
+        public void SetRestingVoltage(PulsePalChannel channel, double volts)
+        {
+            ProgramParameterVoltage(channel, ParameterCode.RestingVoltage, volts);
+        }
+
+        public void SetTriggerMode(PulsePalChannel channel, TriggerMode triggerMode)
+        {
+            ProgramParameter(channel, ParameterCode.TriggerMode, (byte)triggerMode);
+        }
+
+        void ProgramParameter(PulsePalChannel channel, ParameterCode parameter, bool value)
+        {
+            using var writer = new CommandWriter(this);
+            writer.WriteProgramHeader(channel, parameter);
+            writer.Write(value);
+        }
+
+        void ProgramParameter(PulsePalChannel channel, ParameterCode parameter, byte value)
+        {
+            using var writer = new CommandWriter(this);
+            writer.WriteProgramHeader(channel, parameter);
+            writer.Write(value);
+        }
+
+        void ProgramParameterVoltage(PulsePalChannel channel, ParameterCode parameter, double volts)
+        {
+            using var writer = new CommandWriter(this);
+            writer.WriteProgramHeader(channel, parameter);
+            writer.WriteVoltage(volts);
+        }
+
+        void ProgramParameterTime(PulsePalChannel channel, ParameterCode parameter, double seconds)
+        {
+            using var writer = new CommandWriter(this);
+            writer.WriteProgramHeader(channel, parameter);
+            writer.WriteTime(seconds);
+        }
+
+        public void SendCustomPulseTrain(CustomTrainId id, double[] pulseTimes, double[] pulseVoltages)
+        {
+            var command = id switch
             {
-                writer.Write(OpMenu);
-                writer.Write(ProgramParamCommand);
-                writer.Write((byte)parameter);
-                writer.Write((byte)channel);
-                if (parameter >= ParameterCode.Phase1Duration
-                    && parameter < ParameterCode.PulseTrainDelay
-                    || parameter == ParameterCode.RestingVoltage)
-                {
-                    WriteInt(writer, value);
-                }
-                else writer.Write((byte)value);
-                serialPort.Write(commandBuffer, 0, (int)stream.Length);
-            }
-        }
-
-        public void SendCustomPulseTrain(int id, int[] pulseTimes, byte[] pulseVoltages)
-        {
-            if (id < 1 || id > 2)
-            {
-                throw new ArgumentException("Pulse train id must be either 1 or 2.", "id");
-            }
+                CustomTrainId.CustomTrain1 => ProgramPulseTrain1,
+                CustomTrainId.CustomTrain2 => ProgramPulseTrain2,
+                _ => throw new ArgumentException("Invalid pulse train id.", nameof(id))
+            };
 
             if (pulseTimes == null)
             {
-                throw new ArgumentNullException("pulseTimes");
+                throw new ArgumentNullException(nameof(pulseTimes));
             }
 
             if (pulseVoltages == null)
             {
-                throw new ArgumentNullException("pulseVoltages");
+                throw new ArgumentNullException(nameof(pulseVoltages));
             }
 
-            var nPulses = pulseTimes.Length;
-            if (nPulses > 1000)
+            var nPulses = (uint)pulseTimes.Length;
+            if (nPulses > MaxPulseLength)
             {
-                throw new ArgumentException("Exceeded the maximum allowed number of pulses.", "pulseTimes");
+                throw new ArgumentOutOfRangeException("Exceeded the maximum allowed pulse length.", nameof(pulseTimes));
             }
 
             if (pulseTimes.Length != pulseVoltages.Length)
             {
-                throw new ArgumentException("Pulse voltages array must be of same length as pulse times.", "pulseVoltages");
+                throw new ArgumentException("Array of pulse voltages must be of same length as array of pulse times.", nameof(pulseVoltages));
             }
 
-            using (var stream = new MemoryStream())
-            using (var writer = new BinaryWriter(stream))
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(command);
+            if (firmwareVersion < 20)
             {
-                writer.Write(OpMenu);
-                writer.Write(id == 1 ? PulseTrain1Command : PulseTrain2Command);
-                writer.Write((byte)0);
-                WriteInt(writer, nPulses);
-
-                for (int i = 0; i < pulseTimes.Length; i++)
-                {
-                    WriteInt(writer, pulseTimes[i]);
-                }
-
-                for (int i = 0; i < pulseVoltages.Length; i++)
-                {
-                    writer.Write(pulseVoltages[i]);
-                }
-
-                var command = stream.GetBuffer();
-                serialPort.Write(command, 0, (int)stream.Length);
+                // USB packet correction byte
+                writer.Write(0);
             }
-        }
 
-        public void TriggerOutputChannels(byte channels)
-        {
-            commandBuffer[0] = OpMenu;
-            commandBuffer[1] = TriggerCommand;
-            commandBuffer[2] = channels;
-            serialPort.Write(commandBuffer, 0, 3);
-        }
-
-        int WriteText(string text, int index)
-        {
-            var i = 0;
-            for (; i < text.Length && i < 16; i++)
+            writer.Write(nPulses);
+            for (int i = 0; i < pulseTimes.Length; i++)
             {
-                commandBuffer[i + index] = (byte)text[i];
+                writer.WriteTime(pulseTimes[i]);
             }
 
-            return index + i;
+            for (int i = 0; i < pulseVoltages.Length; i++)
+            {
+                writer.WriteVoltage(pulseVoltages[i]);
+            }
         }
 
-        public void SetDisplay(string text)
+        public void TriggerChannels(TriggerChannels channels)
         {
-            SetDisplay(text, string.Empty);
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(TriggerCommand);
+            writer.Write((byte)channels);
         }
 
-        public void SetDisplay(string row1, string row2)
+        public void UpdateDisplay(string text)
         {
-            var index = 0;
-            commandBuffer[index++] = OpMenu;
-            commandBuffer[index++] = SetDisplayCommand;
-            index = WriteText(row1, index);
+            UpdateDisplay(text, string.Empty);
+        }
+
+        public void UpdateDisplay(string row1, string row2)
+        {
+            const int MaxDisplayCharacters = 16;
+            var textWriter = new CommandWriter(this);
+            textWriter.WriteText(row1, MaxDisplayCharacters);
             if (!string.IsNullOrEmpty(row2))
             {
-                commandBuffer[index++] = LineBreak;
-                WriteText(row2, index);
+                textWriter.Write(LineBreak);
+                textWriter.WriteText(row2, MaxDisplayCharacters);
             }
+
+            var message = new byte[textWriter.Length];
+            Array.Copy(commandBuffer, message, message.Length);
+
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(UpdateDisplayCommand);
+            writer.Write((byte)message.Length);
+            writer.Write(message);
         }
 
-        public void SetFixedVoltage(byte channel, byte voltage)
+        public void SetFixedVoltage(PulsePalChannel channel, double volts)
         {
-            commandBuffer[0] = OpMenu;
-            commandBuffer[1] = SetVoltageCommand;
-            commandBuffer[2] = channel;
-            commandBuffer[3] = voltage;
-            serialPort.Write(commandBuffer, 0, 4);
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(SetVoltageCommand);
+            writer.Write((byte)channel);
+            writer.WriteVoltage(volts);
         }
 
         public void AbortPulseTrains()
         {
-            commandBuffer[0] = OpMenu;
-            commandBuffer[1] = AbortCommand;
-            serialPort.Write(commandBuffer, 0, 2);
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(AbortCommand);
         }
 
-        public void SetContinuousLoop(byte channel, bool loop)
+        public void SetContinuousLoop(PulsePalChannel channel, bool loop)
         {
-            commandBuffer[0] = OpMenu;
-            commandBuffer[1] = LoopCommand;
-            commandBuffer[2] = channel;
-            commandBuffer[3] = (byte)(loop ? 1 : 0);
-            serialPort.Write(commandBuffer, 0, 4);
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(LoopCommand);
+            writer.Write((byte)channel);
+            writer.Write(loop);
         }
 
         public void SetClientId(string id)
         {
-            commandBuffer[0] = OpMenu;
-            commandBuffer[1] = ClientIdCommand;
+            using var writer = new CommandWriter(this);
+            writer.Write(OpMenu);
+            writer.Write(ClientIdCommand);
             for (int i = 0; i < 6; i++)
             {
-                commandBuffer[i + 2] = i < id.Length ? (byte)id[i] : (byte)' ';
-            }
-            serialPort.Write(commandBuffer, 0, 8);
-        }
-
-        void SetVersion(int majorVersion, int minorVersion)
-        {
-            MajorVersion = majorVersion;
-            MinorVersion = minorVersion;
-        }
-
-        void ProcessInput(byte inputData)
-        {
-            if (!initialized && inputData != Acknowledge)
-            {
-                throw new InvalidOperationException("Unexpected return value from PulsePal.");
-            }
-
-            switch (inputData)
-            {
-                case Acknowledge:
-                    initialized = true;
-                    break;
-                default:
-                    break;
+                writer.Write(i < id.Length ? (byte)id[i] : (byte)' ');
             }
         }
 
@@ -332,6 +424,110 @@ namespace Bonsai.PulsePal
         void IDisposable.Dispose()
         {
             Close();
+        }
+
+        struct CommandWriter : IDisposable
+        {
+            int offset;
+            readonly PulsePal device;
+
+            public CommandWriter(PulsePal pulsePal)
+            {
+                offset = 0;
+                device = pulsePal;
+            }
+
+            public readonly int Length => offset;
+
+            public void Write(byte value)
+            {
+                device.commandBuffer[offset++] = value;
+            }
+
+            public void Write(bool value)
+            {
+                device.commandBuffer[offset++] = (byte)(value ? 1 : 0);
+            }
+
+            public void Write(ushort value)
+            {
+                device.commandBuffer[offset++] = (byte)value;
+                device.commandBuffer[offset++] = (byte)(value >> 8);
+            }
+
+            public void Write(uint value)
+            {
+                device.commandBuffer[offset++] = (byte)value;
+                device.commandBuffer[offset++] = (byte)(value >> 8);
+                device.commandBuffer[offset++] = (byte)(value >> 16);
+                device.commandBuffer[offset++] = (byte)(value >> 24);
+            }
+
+            public void Write(byte[] bytes)
+            {
+                Array.Copy(bytes, 0, device.commandBuffer, offset, bytes.Length);
+                offset += bytes.Length;
+            }
+
+            public void WriteTime(double seconds)
+            {
+                var cycles = GetTimeCycles((decimal)seconds);
+                Write(cycles);
+            }
+
+            public void WriteVoltage(double volts)
+            {
+                var steps = GetVoltageSteps((decimal)volts);
+                if (device.dacMaxValue > byte.MaxValue)
+                {
+                    Write((ushort)steps);
+                }
+                else Write((byte)steps);
+            }
+
+            public void WriteText(string text, int maxChars)
+            {
+                for (int i = 0; i < text.Length && i < maxChars; i++)
+                {
+                    Write((byte)text[i]);
+                }
+            }
+
+            public void WriteProgramHeader(PulsePalChannel channel, ParameterCode parameter)
+            {
+                Write(OpMenu);
+                Write(ProgramParam);
+                Write((byte)parameter);
+                Write((byte)channel);
+            }
+
+            readonly int GetVoltageSteps(decimal volts)
+            {
+                return (int)(decimal.Ceiling((volts + 10) / 20) * device.dacMaxValue);
+            }
+
+            readonly uint GetTimeCycles(decimal seconds)
+            {
+                var cycles = (uint)(seconds * CycleFrequency);
+                ThrowIfCyclesOutOfRange(cycles, nameof(seconds));
+                return cycles;
+            }
+
+            static void ThrowIfCyclesOutOfRange(uint cycles, string paramName)
+            {
+                if (cycles > MaxCyclePeriod)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        "The specified value exceeds the maximum allowed Pulse Pal time interval.",
+                        paramName);
+                }
+            }
+
+            public void Dispose()
+            {
+                device.serialPort.Write(device.commandBuffer, 0, offset);
+                offset = 0;
+            }
         }
     }
 }

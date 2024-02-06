@@ -9,8 +9,6 @@ namespace Bonsai.PulsePal
     [Description("Uploads a custom pulse train to the Pulse Pal.")]
     public class UpdatePulseTrain : Sink<Mat>
     {
-        const int CycleTimeMicroseconds = 50;
-
         public UpdatePulseTrain()
         {
             PulseId = 1;
@@ -32,9 +30,9 @@ namespace Bonsai.PulsePal
                 () => PulsePalManager.ReserveConnection(PortName),
                 pulsePal => source.Do(input =>
                 {
-                    var pulseInterval = 1000000 / (Frequency * CycleTimeMicroseconds);
-                    var pulseTimes = new int[input.Cols];
-                    var pulseVoltages = new byte[input.Cols];
+                    var pulseInterval = 1.0 / Frequency;
+                    var pulseTimes = new double[input.Cols];
+                    var pulseVoltages = new double[input.Cols];
                     for (int i = 0; i < pulseTimes.Length; i++)
                     {
                         pulseTimes[i] = pulseInterval * i;
@@ -47,7 +45,7 @@ namespace Bonsai.PulsePal
 
                     lock (pulsePal.PulsePal)
                     {
-                        pulsePal.PulsePal.SendCustomPulseTrain(PulseId, pulseTimes, pulseVoltages);
+                        pulsePal.PulsePal.SendCustomPulseTrain((CustomTrainId)PulseId, pulseTimes, pulseVoltages);
                     }
                 }));
         }
