@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Bonsai.PulsePal
 {
-    public static class PulsePalManager
+    internal static class PulsePalManager
     {
         public const string DefaultConfigurationFile = "PulsePal.config";
         static readonly Dictionary<string, Tuple<PulsePal, RefCountDisposable>> openConnections = new Dictionary<string, Tuple<PulsePal, RefCountDisposable>>();
