@@ -24,5 +24,18 @@ namespace Bonsai.PulsePal
         /// </summary>
         [Description("The collection of parameters used to program the operation of the Pulse Pal device.")]
         public ChannelParameterConfigurationCollection ChannelParameters { get; } = new();
+
+        /// <summary>
+        /// Applies all channel parameter configurations to the specified
+        /// Pulse Pal device.
+        /// </summary>
+        /// <param name="device">The Pulse Pal device to configure.</param>
+        public void Configure(PulsePal device)
+        {
+            foreach (var configuration in ChannelParameters)
+            {
+                configuration.Configure(device);
+            }
+        }
     }
 }
