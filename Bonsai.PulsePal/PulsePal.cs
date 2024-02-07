@@ -6,6 +6,9 @@ using System.Reactive.Subjects;
 
 namespace Bonsai.PulsePal
 {
+    /// <summary>
+    /// Represents a Pulse Pal device.
+    /// </summary>
     public sealed class PulsePal : IDisposable
     {
         const int BaudRate = 115200;
