@@ -10,34 +10,18 @@ namespace Bonsai.PulsePal
 
         public PulsePalDisposable(PulsePal pulsePal, IDisposable disposable)
         {
-            if (pulsePal == null)
-            {
-                throw new ArgumentNullException("pulsePal");
-            }
-
-            if (disposable == null)
-            {
-                throw new ArgumentNullException("disposable");
-            }
-
-            PulsePal = pulsePal;
-            resource = disposable;
+            PulsePal = pulsePal ?? throw new ArgumentNullException(nameof(pulsePal));
+            resource = disposable ?? throw new ArgumentNullException(nameof(disposable));
         }
 
         public PulsePal PulsePal { get; private set; }
 
-        public bool IsDisposed
-        {
-            get { return resource == null; }
-        }
+        public bool IsDisposed => resource == null;
 
         public void Dispose()
         {
-            var disposable = Interlocked.Exchange<IDisposable>(ref resource, null);
-            if (disposable != null)
-            {
-                disposable.Dispose();
-            }
+            var disposable = Interlocked.Exchange(ref resource, null);
+            disposable?.Dispose();
         }
     }
 }
