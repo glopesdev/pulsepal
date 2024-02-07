@@ -189,7 +189,7 @@ namespace Bonsai.PulsePal
         /// <see langword="true"/> to produce biphasic pulses;
         /// <see langword="false"/> to produce monophasic pulses.
         /// </param>
-        public void SetBiphasic(PulsePalChannel channel, bool isBiphasic)
+        public void SetBiphasic(OutputChannel channel, bool isBiphasic)
         {
             ProgramParameter(channel, ParameterCode.Biphasic, isBiphasic);
         }
@@ -202,7 +202,7 @@ namespace Bonsai.PulsePal
         /// <param name="volts">
         /// The voltage of the first phase of the pulse, in the range [-10, 10] volts.
         /// </param>
-        public void SetPhase1Voltage(PulsePalChannel channel, double volts)
+        public void SetPhase1Voltage(OutputChannel channel, double volts)
         {
             ProgramParameterVoltage(channel, ParameterCode.Phase1Voltage, volts);
         }
@@ -215,7 +215,7 @@ namespace Bonsai.PulsePal
         /// <param name="volts">
         /// The voltage of the second phase of the pulse, in the range [-10, 10] volts.
         /// </param>
-        public void SetPhase2Voltage(PulsePalChannel channel, double volts)
+        public void SetPhase2Voltage(OutputChannel channel, double volts)
         {
             ProgramParameterVoltage(channel, ParameterCode.Phase2Voltage, volts);
         }
@@ -229,7 +229,7 @@ namespace Bonsai.PulsePal
         /// The duration of the first phase of the pulse, in the range
         /// [0.0001, 3600] seconds.
         /// </param>
-        public void SetPhase1Duration(PulsePalChannel channel, double seconds)
+        public void SetPhase1Duration(OutputChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.Phase1Duration, seconds);
         }
@@ -243,7 +243,7 @@ namespace Bonsai.PulsePal
         /// The interval between the first and second phase of a biphasic pulse,
         /// in the range [0.0001, 3600] seconds.
         /// </param>
-        public void SetInterPhaseInterval(PulsePalChannel channel, double seconds)
+        public void SetInterPhaseInterval(OutputChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.InterPhaseInterval, seconds);
         }
@@ -257,7 +257,7 @@ namespace Bonsai.PulsePal
         /// The duration of the second phase of the pulse, in the range
         /// [0.0001, 3600] seconds.
         /// </param>
-        public void SetPhase2Duration(PulsePalChannel channel, double seconds)
+        public void SetPhase2Duration(OutputChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.Phase2Duration, seconds);
         }
@@ -269,7 +269,7 @@ namespace Bonsai.PulsePal
         /// <param name="seconds">
         /// The interval between pulses, in the range [0.0001, 3600] seconds.
         /// </param>
-        public void SetInterPulseInterval(PulsePalChannel channel, double seconds)
+        public void SetInterPulseInterval(OutputChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.InterPulseInterval, seconds);
         }
@@ -282,7 +282,7 @@ namespace Bonsai.PulsePal
         /// The duration of a pulse burst, in the range [0.0001, 3600] seconds.
         /// Burst mode is automatically disabled if this value is set to zero.
         /// </param>
-        public void SetBurstDuration(PulsePalChannel channel, double seconds)
+        public void SetBurstDuration(OutputChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.BurstDuration, seconds);
         }
@@ -295,7 +295,7 @@ namespace Bonsai.PulsePal
         /// The duration of the off-time between bursts, in the range
         /// [0.0001, 3600] seconds.
         /// </param>
-        public void SetInterBurstInterval(PulsePalChannel channel, double seconds)
+        public void SetInterBurstInterval(OutputChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.InterBurstInterval, seconds);
         }
@@ -307,7 +307,7 @@ namespace Bonsai.PulsePal
         /// <param name="seconds">
         /// The duration of the pulse train, in the range [0.0001, 3600] seconds.
         /// </param>
-        public void SetPulseTrainDuration(PulsePalChannel channel, double seconds)
+        public void SetPulseTrainDuration(OutputChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.PulseTrainDuration, seconds);
         }
@@ -320,7 +320,7 @@ namespace Bonsai.PulsePal
         /// <param name="seconds">
         /// The delay to start the pulse train, in the range [0.0001, 3600] seconds.
         /// </param>
-        public void SetPulseTrainDelay(PulsePalChannel channel, double seconds)
+        public void SetPulseTrainDelay(OutputChannel channel, double seconds)
         {
             ProgramParameterTime(channel, ParameterCode.PulseTrainDelay, seconds);
         }
@@ -333,7 +333,7 @@ namespace Bonsai.PulsePal
         /// <see langword="true"/> if trigger channel 1 can trigger this output channel;
         /// <see langword="false"/> otherwise.
         /// </param>
-        public void SetTriggerOnChannel1(PulsePalChannel channel, bool enabled)
+        public void SetTriggerOnChannel1(OutputChannel channel, bool enabled)
         {
             ProgramParameter(channel, ParameterCode.TriggerOnChannel1, enabled);
         }
@@ -346,7 +346,7 @@ namespace Bonsai.PulsePal
         /// <see langword="true"/> if trigger channel 2 can trigger this output channel;
         /// <see langword="false"/> otherwise.
         /// </param>
-        public void SetTriggerOnChannel2(PulsePalChannel channel, bool enabled)
+        public void SetTriggerOnChannel2(OutputChannel channel, bool enabled)
         {
             ProgramParameter(channel, ParameterCode.TriggerOnChannel2, enabled);
         }
@@ -360,7 +360,7 @@ namespace Bonsai.PulsePal
         /// The identity of the custom pulse train to use on the specified
         /// output channel.
         /// </param>
-        public void SetCustomTrainIdentity(PulsePalChannel channel, CustomTrainId trainId)
+        public void SetCustomTrainIdentity(OutputChannel channel, CustomTrainId trainId)
         {
             ProgramParameter(channel, ParameterCode.CustomTrainIdentity, (byte)trainId);
         }
@@ -373,7 +373,7 @@ namespace Bonsai.PulsePal
         /// <param name="target">
         /// The interpretation of pulse times in the custom pulse train.
         /// </param>
-        public void SetCustomTrainTarget(PulsePalChannel channel, CustomTrainTarget target)
+        public void SetCustomTrainTarget(OutputChannel channel, CustomTrainTarget target)
         {
             ProgramParameter(channel, ParameterCode.CustomTrainTarget, (byte)target);
         }
@@ -387,7 +387,7 @@ namespace Bonsai.PulsePal
         /// for the duration specified by <see cref="SetPulseTrainDuration"/>; otherwise,
         /// the pulse train ends after its final pulse.
         /// </param>
-        public void SetCustomTrainLoop(PulsePalChannel channel, bool loop)
+        public void SetCustomTrainLoop(OutputChannel channel, bool loop)
         {
             ProgramParameter(channel, ParameterCode.CustomTrainLoop, loop);
         }
@@ -400,7 +400,7 @@ namespace Bonsai.PulsePal
         /// <param name="volts">
         /// The resting voltage, in the range [-10, 10] volts.
         /// </param>
-        public void SetRestingVoltage(PulsePalChannel channel, double volts)
+        public void SetRestingVoltage(OutputChannel channel, double volts)
         {
             ProgramParameterVoltage(channel, ParameterCode.RestingVoltage, volts);
         }
@@ -408,40 +408,35 @@ namespace Bonsai.PulsePal
         /// <summary>
         /// Sets the behavior of a trigger channel.
         /// </summary>
-        /// <param name="channel">
-        /// The trigger channel to configure. Currently, only channels 1 or 2
-        /// can be used as triggers.
-        /// </param>
-        /// <param name="triggerMode">
-        /// Specifies the behavior of the trigger channel.
-        /// </param>
-        public void SetTriggerMode(PulsePalChannel channel, TriggerMode triggerMode)
+        /// <param name="channel">The trigger channel to configure.</param>
+        /// <param name="triggerMode">Specifies the behavior of the trigger channel.</param>
+        public void SetTriggerMode(TriggerChannel channel, TriggerMode triggerMode)
         {
-            ProgramParameter(channel, ParameterCode.TriggerMode, (byte)triggerMode);
+            ProgramParameter((OutputChannel)channel, ParameterCode.TriggerMode, (byte)triggerMode);
         }
 
-        void ProgramParameter(PulsePalChannel channel, ParameterCode parameter, bool value)
+        void ProgramParameter(OutputChannel channel, ParameterCode parameter, bool value)
         {
             using var writer = new CommandWriter(this);
             writer.WriteProgramHeader(channel, parameter);
             writer.Write(value);
         }
 
-        void ProgramParameter(PulsePalChannel channel, ParameterCode parameter, byte value)
+        void ProgramParameter(OutputChannel channel, ParameterCode parameter, byte value)
         {
             using var writer = new CommandWriter(this);
             writer.WriteProgramHeader(channel, parameter);
             writer.Write(value);
         }
 
-        void ProgramParameterVoltage(PulsePalChannel channel, ParameterCode parameter, double volts)
+        void ProgramParameterVoltage(OutputChannel channel, ParameterCode parameter, double volts)
         {
             using var writer = new CommandWriter(this);
             writer.WriteProgramHeader(channel, parameter);
             writer.WriteVoltage(volts);
         }
 
-        void ProgramParameterTime(PulsePalChannel channel, ParameterCode parameter, double seconds)
+        void ProgramParameterTime(OutputChannel channel, ParameterCode parameter, double seconds)
         {
             using var writer = new CommandWriter(this);
             writer.WriteProgramHeader(channel, parameter);
@@ -586,7 +581,7 @@ namespace Bonsai.PulsePal
         /// <param name="volts">
         /// The voltage to set on the output channel, in the range [-10, 10] volts.
         /// </param>
-        public void SetFixedVoltage(PulsePalChannel channel, double volts)
+        public void SetFixedVoltage(OutputChannel channel, double volts)
         {
             using var writer = new CommandWriter(this);
             writer.Write(OpMenu);
@@ -614,7 +609,7 @@ namespace Bonsai.PulsePal
         /// <see langword="true"/> to set the output channel in continuous loop mode;
         /// <see langword="false"/> otherwise.
         /// </param>
-        public void SetContinuousLoop(PulsePalChannel channel, bool loop)
+        public void SetContinuousLoop(OutputChannel channel, bool loop)
         {
             using var writer = new CommandWriter(this);
             writer.Write(OpMenu);
@@ -739,7 +734,7 @@ namespace Bonsai.PulsePal
                 }
             }
 
-            public void WriteProgramHeader(PulsePalChannel channel, ParameterCode parameter)
+            public void WriteProgramHeader(OutputChannel channel, ParameterCode parameter)
             {
                 Write(OpMenu);
                 Write(ProgramParam);
