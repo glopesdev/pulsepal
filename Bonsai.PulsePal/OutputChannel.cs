@@ -5,7 +5,7 @@ namespace Bonsai.PulsePal
     /// <summary>
     /// Specifies the output channel on a Pulse Pal device.
     /// </summary>
-    public enum PulsePalChannel : byte
+    public enum OutputChannel : byte
     {
         /// <summary>
         /// The output channel 1.
