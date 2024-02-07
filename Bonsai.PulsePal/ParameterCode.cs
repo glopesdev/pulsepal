@@ -1,6 +1,6 @@
 ﻿namespace Bonsai.PulsePal
 {
-    public enum ParameterCode : byte
+    internal enum ParameterCode : byte
     {
         Biphasic = 1,
         Phase1Voltage = 2,

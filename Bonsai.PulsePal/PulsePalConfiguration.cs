@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
-using Bonsai.IO;
+using Bonsai.IO.Ports;
 
 namespace Bonsai.PulsePal
 {
-    public class PulsePalConfiguration
+    internal class PulsePalConfiguration
     {
         internal static readonly PulsePalConfiguration Default = new PulsePalConfiguration();
 

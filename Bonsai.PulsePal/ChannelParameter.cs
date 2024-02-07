@@ -2,7 +2,7 @@
 
 namespace Bonsai.PulsePal
 {
-    public class ChannelParameter
+    internal class ChannelParameter
     {
         public ChannelParameter()
         {
