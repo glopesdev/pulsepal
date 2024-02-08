@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using Bonsai.IO.Ports;
 
 namespace Bonsai.PulsePal
 {
@@ -19,7 +18,7 @@ namespace Bonsai.PulsePal
         /// Pulse Pal device.
         /// </summary>
         [Category(ChannelCategory)]
-        [TypeConverter(typeof(SerialPortNameConverter))]
+        [TypeConverter(typeof(PortNameConverter))]
         [Description("The name of the serial port used to communicate with the Pulse Pal device.")]
         public string PortName { get; set; }
 
