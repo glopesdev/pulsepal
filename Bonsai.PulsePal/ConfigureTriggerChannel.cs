@@ -62,10 +62,15 @@ namespace Bonsai.PulsePal
                 {
                     lock (connection.PulsePal)
                     {
-                        var channel = Channel;
-                        connection.PulsePal.SetTriggerMode(channel, TriggerMode);
+                        Configure(connection.PulsePal);
                     }
                 })));
+        }
+
+        internal void Configure(PulsePal pulsePal)
+        {
+            var channel = Channel;
+            pulsePal.SetTriggerMode(channel, TriggerMode);
         }
     }
 }

@@ -1,22 +1,26 @@
-﻿using System.ComponentModel;
-using Bonsai.IO.Ports;
-
-namespace Bonsai.PulsePal
+﻿namespace Bonsai.PulsePal
 {
     internal class PulsePalConfiguration
     {
-        internal static readonly PulsePalConfiguration Default = new PulsePalConfiguration();
+        internal static readonly PulsePalConfiguration Default = new();
 
-        readonly ChannelParameterCollection channelParameters = new ChannelParameterCollection();
-
-        [Description("The name of the serial port.")]
-        [TypeConverter(typeof(SerialPortNameConverter))]
         public string PortName { get; set; }
 
-        [Description("The collection of parameters used to specify operation of individual channels.")]
-        public ChannelParameterCollection ChannelParameters
+        public ConfigureOutputChannelCollection OutputChannels { get; } = new();
+
+        public ConfigureTriggerChannelCollection TriggerChannels { get; } = new();
+
+        public void Configure(PulsePal pulsePal)
         {
-            get { return channelParameters; }
+            foreach (var outputChannel in OutputChannels)
+            {
+                outputChannel.Configure(pulsePal);
+            }
+
+            foreach (var triggerChannel in TriggerChannels)
+            {
+                triggerChannel.Configure(pulsePal);
+            }
         }
     }
 }

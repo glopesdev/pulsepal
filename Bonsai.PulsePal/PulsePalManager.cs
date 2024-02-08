@@ -40,7 +40,8 @@ namespace Bonsai.PulsePal
 
                     var pulsePal = new PulsePal(serialPortName);
                     pulsePal.Open();
-                    pulsePal.SetClientId("Bonsai");
+                    pulsePal.SetClientId(nameof(Bonsai));
+                    pulsePalConfiguration.Configure(pulsePal);
                     var dispose = Disposable.Create(() =>
                     {
                         pulsePal.Close();

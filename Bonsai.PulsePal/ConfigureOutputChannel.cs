@@ -232,26 +232,31 @@ namespace Bonsai.PulsePal
                 {
                     lock (connection.PulsePal)
                     {
-                        var channel = Channel;
-                        connection.PulsePal.SetBiphasic(channel, Biphasic);
-                        connection.PulsePal.SetPhase1Voltage(channel, Phase1Voltage);
-                        connection.PulsePal.SetPhase2Voltage(channel, Phase2Voltage);
-                        connection.PulsePal.SetPhase1Duration(channel, Phase1Duration);
-                        connection.PulsePal.SetInterPhaseInterval(channel, InterPhaseInterval);
-                        connection.PulsePal.SetPhase2Duration(channel, Phase2Duration);
-                        connection.PulsePal.SetInterPulseInterval(channel, InterPulseInterval);
-                        connection.PulsePal.SetBurstDuration(channel, BurstDuration);
-                        connection.PulsePal.SetInterBurstInterval(channel, InterBurstInterval);
-                        connection.PulsePal.SetPulseTrainDuration(channel, PulseTrainDuration);
-                        connection.PulsePal.SetPulseTrainDelay(channel, PulseTrainDelay);
-                        connection.PulsePal.SetTriggerOnChannel1(channel, TriggerOnChannel1);
-                        connection.PulsePal.SetTriggerOnChannel2(channel, TriggerOnChannel2);
-                        connection.PulsePal.SetCustomTrainIdentity(channel, CustomTrainIdentity);
-                        connection.PulsePal.SetCustomTrainTarget(channel, CustomTrainTarget);
-                        connection.PulsePal.SetCustomTrainLoop(channel, CustomTrainLoop);
-                        connection.PulsePal.SetRestingVoltage(channel, RestingVoltage);
+                        Configure(connection.PulsePal);
                     }
                 })));
+        }
+
+        internal void Configure(PulsePal pulsePal)
+        {
+            var channel = Channel;
+            pulsePal.SetBiphasic(channel, Biphasic);
+            pulsePal.SetPhase1Voltage(channel, Phase1Voltage);
+            pulsePal.SetPhase2Voltage(channel, Phase2Voltage);
+            pulsePal.SetPhase1Duration(channel, Phase1Duration);
+            pulsePal.SetInterPhaseInterval(channel, InterPhaseInterval);
+            pulsePal.SetPhase2Duration(channel, Phase2Duration);
+            pulsePal.SetInterPulseInterval(channel, InterPulseInterval);
+            pulsePal.SetBurstDuration(channel, BurstDuration);
+            pulsePal.SetInterBurstInterval(channel, InterBurstInterval);
+            pulsePal.SetPulseTrainDuration(channel, PulseTrainDuration);
+            pulsePal.SetPulseTrainDelay(channel, PulseTrainDelay);
+            pulsePal.SetTriggerOnChannel1(channel, TriggerOnChannel1);
+            pulsePal.SetTriggerOnChannel2(channel, TriggerOnChannel2);
+            pulsePal.SetCustomTrainIdentity(channel, CustomTrainIdentity);
+            pulsePal.SetCustomTrainTarget(channel, CustomTrainTarget);
+            pulsePal.SetCustomTrainLoop(channel, CustomTrainLoop);
+            pulsePal.SetRestingVoltage(channel, RestingVoltage);
         }
     }
 }
