@@ -739,6 +739,8 @@ namespace Bonsai.PulsePal
 
             public void WriteProgramHeader(OutputChannel channel, ParameterCode parameter)
             {
+                if (channel == 0) throw new ArgumentOutOfRangeException(nameof(channel));
+
                 Write(OpMenu);
                 Write(ProgramParam);
                 Write((byte)parameter);
