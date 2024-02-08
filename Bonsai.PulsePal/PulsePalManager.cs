@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
-using System.Threading.Tasks;
 
 namespace Bonsai.PulsePal
 {
@@ -14,11 +13,6 @@ namespace Bonsai.PulsePal
         internal static PulsePalDisposable ReserveConnection(string portName)
         {
             return ReserveConnection(portName, PulsePalConfiguration.Default);
-        }
-
-        internal static async Task<PulsePalDisposable> ReserveConnectionAsync(string portName)
-        {
-            return await Task.Run(() => ReserveConnection(portName, PulsePalConfiguration.Default));
         }
 
         internal static PulsePalDisposable ReserveConnection(string portName, PulsePalConfiguration pulsePalConfiguration)

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 
 namespace Bonsai.PulsePal
 {
@@ -9,9 +8,13 @@ namespace Bonsai.PulsePal
     /// Represents an operator that configures trigger channel parameters on a Pulse Pal device.
     /// </summary>
     [Description("Configures trigger channel parameters on a Pulse Pal device.")]
-    public class ConfigureTriggerChannel : Sink
+    public class ConfigureTriggerChannel : Sink, INamedElement
     {
         const string ChannelCategory = "Channel";
+
+        string INamedElement.Name => Channel == 0
+            ? nameof(ConfigureTriggerChannel)
+            : $"ConfigureTrigger{Channel}";
 
         /// <summary>
         /// Gets or sets the name of the serial port used to communicate with the
@@ -56,14 +59,31 @@ namespace Bonsai.PulsePal
         public override IObservable<TSource> Process<TSource>(IObservable<TSource> source)
         {
             return Observable.Using(
-                cancellationToken => PulsePalManager.ReserveConnectionAsync(PortName),
-                (connection, cancellationToken) => Task.FromResult(source.Do(input =>
+                () => PulsePalManager.ReserveConnection(PortName),
+                connection => source.Do(input =>
                 {
                     lock (connection.PulsePal)
                     {
                         Configure(connection.PulsePal);
                     }
-                })));
+                }));
+        }
+
+        /// <summary>
+        /// Configures the trigger channel parameters on every Pulse Pal device
+        /// in the observable sequence.
+        /// </summary>
+        /// <param name="source">
+        /// The sequence of Pulse Pal devices to configure.
+        /// </param>
+        /// <returns>
+        /// An observable sequence that is identical to the <paramref name="source"/>
+        /// sequence but where there is an additional side effect of configuring the
+        /// trigger channel parameters on each Pulse Pal device.
+        /// </returns>
+        public IObservable<PulsePal> Process(IObservable<PulsePal> source)
+        {
+            return source.Do(Configure);
         }
 
         internal void Configure(PulsePal pulsePal)
