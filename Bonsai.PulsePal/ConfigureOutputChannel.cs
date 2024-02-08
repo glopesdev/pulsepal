@@ -40,7 +40,7 @@ namespace Bonsai.PulsePal
         /// </summary>
         [Category(ChannelCategory)]
         [Description("The output channel to configure.")]
-        public OutputChannel Channel { get; set; } = OutputChannel.Channel1;
+        public OutputChannel Channel { get; set; }
 
         /// <summary>
         /// Gets or sets a value specifying whether to use biphasic or
@@ -257,6 +257,12 @@ namespace Bonsai.PulsePal
             pulsePal.SetCustomTrainTarget(channel, CustomTrainTarget);
             pulsePal.SetCustomTrainLoop(channel, CustomTrainLoop);
             pulsePal.SetRestingVoltage(channel, RestingVoltage);
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return Channel == 0 ? nameof(ConfigureOutputChannel) : $"{Channel}";
         }
     }
 }

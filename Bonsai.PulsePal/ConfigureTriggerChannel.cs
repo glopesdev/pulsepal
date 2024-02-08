@@ -28,7 +28,7 @@ namespace Bonsai.PulsePal
         /// </summary>
         [Category(ChannelCategory)]
         [Description("The trigger channel to configure.")]
-        public TriggerChannel Channel { get; set; } = TriggerChannel.Channel1;
+        public TriggerChannel Channel { get; set; }
 
         /// <summary>
         /// Gets or sets a value specifying the behavior of the trigger channel.
@@ -71,6 +71,12 @@ namespace Bonsai.PulsePal
         {
             var channel = Channel;
             pulsePal.SetTriggerMode(channel, TriggerMode);
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return Channel == 0 ? nameof(ConfigureTriggerChannel) : $"{Channel}";
         }
     }
 }
