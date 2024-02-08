@@ -89,14 +89,14 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The duration of the first phase of the pulse, in seconds.")]
-        public double Phase1Duration { get; set; }
+        public double Phase1Duration { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the interval between the first and second phase of a biphasic pulse,
-        /// in the range [0.0001, 3600] seconds.
+        /// in the range [0, 3600] seconds.
         /// </summary>
         [Category(TimingCategory)]
-        [Range(MinTimePeriod, MaxTimePeriod)]
+        [Range(0, MaxTimePeriod)]
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The interval between the first and second phase of a biphasic pulse, in seconds.")]
@@ -111,7 +111,7 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The duration of the second phase of the pulse, in seconds.")]
-        public double Phase2Duration { get; set; }
+        public double Phase2Duration { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the interval between pulses, in the range [0.0001, 3600] seconds.
@@ -121,17 +121,17 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The interval between pulses, in seconds.")]
-        public double InterPulseInterval { get; set; }
+        public double InterPulseInterval { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the duration of a pulse burst, in the range
-        /// [0.0001, 3600] seconds.
+        /// [0, 3600] seconds. If set to zero, bursts are disabled.
         /// </summary>
         [Category(TimingCategory)]
-        [Range(MinTimePeriod, MaxTimePeriod)]
+        [Range(0, MaxTimePeriod)]
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
-        [Description("The duration of a pulse burst, in seconds.")]
+        [Description("The duration of a pulse burst, in seconds. If set to zero, bursts are disabled.")]
         public double BurstDuration { get; set; }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The duration of the off-time between bursts, in seconds.")]
-        public double InterBurstInterval { get; set; }
+        public double InterBurstInterval { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the duration of the pulse train, in the range
@@ -154,7 +154,7 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The duration of the pulse train, in seconds.")]
-        public double PulseTrainDuration { get; set; }
+        public double PulseTrainDuration { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the delay to start the pulse train, in the range
@@ -165,7 +165,7 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The delay to start the pulse train, in seconds.")]
-        public double PulseTrainDelay { get; set; }
+        public double PulseTrainDelay { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets a value specifying the identity of the custom pulse train
