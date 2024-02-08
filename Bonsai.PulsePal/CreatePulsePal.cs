@@ -10,9 +10,12 @@ namespace Bonsai.PulsePal
     /// Represents an operator that creates and configures a serial connection
     /// to a Pulse Pal device.
     /// </summary>
+    [DefaultProperty(nameof(OutputChannels))]
     [Description("Creates and configures a serial connection to a Pulse Pal device.")]
     public class CreatePulsePal : Source<PulsePal>, INamedElement
     {
+        const string ChannelCategory = "Channel";
+
         readonly PulsePalConfiguration configuration = new();
 
         /// <summary>
@@ -36,12 +39,14 @@ namespace Bonsai.PulsePal
         /// <summary>
         /// Gets the collection of output channels to configure on the Pulse Pal device.
         /// </summary>
+        [Category(ChannelCategory)]
         [Description("The collection of output channels to configure on the Pulse Pal device.")]
         public ConfigureOutputChannelCollection OutputChannels => configuration.OutputChannels;
 
         /// <summary>
         /// Gets the collection of trigger channels to configure on the Pulse Pal device.
         /// </summary>
+        [Category(ChannelCategory)]
         [Description("The collection of trigger channels to configure on the Pulse Pal device.")]
         public ConfigureTriggerChannelCollection TriggerChannels => configuration.TriggerChannels;
 
