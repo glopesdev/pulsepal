@@ -39,19 +39,27 @@ namespace Bonsai.PulsePal
                     if (string.IsNullOrEmpty(serialPortName)) serialPortName = portName;
 
                     var pulsePal = new PulsePal(serialPortName);
-                    pulsePal.Open();
-                    pulsePal.SetClientId(nameof(Bonsai));
-                    pulsePalConfiguration.Configure(pulsePal);
-                    var dispose = Disposable.Create(() =>
+                    try
+                    {
+                        pulsePal.Open();
+                        pulsePal.SetClientId(nameof(Bonsai));
+                        pulsePalConfiguration.Configure(pulsePal);
+                        var dispose = Disposable.Create(() =>
+                        {
+                            pulsePal.Close();
+                            openConnections.Remove(portName);
+                        });
+
+                        var refCount = new RefCountDisposable(dispose);
+                        connection = Tuple.Create(pulsePal, refCount);
+                        openConnections.Add(portName, connection);
+                        return new PulsePalDisposable(pulsePal, refCount);
+                    }
+                    catch
                     {
                         pulsePal.Close();
-                        openConnections.Remove(portName);
-                    });
-
-                    var refCount = new RefCountDisposable(dispose);
-                    connection = Tuple.Create(pulsePal, refCount);
-                    openConnections.Add(portName, connection);
-                    return new PulsePalDisposable(pulsePal, refCount);
+                        throw;
+                    }
                 }
             }
 
