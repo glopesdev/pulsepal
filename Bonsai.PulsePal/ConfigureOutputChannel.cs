@@ -1,8 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Bonsai.IO.Ports;
 
 namespace Bonsai.PulsePal
 {
@@ -11,12 +9,12 @@ namespace Bonsai.PulsePal
     /// Pulse Pal device.
     /// </summary>
     [Description("Configures output channel parameters on a Pulse Pal device.")]
-    public class ConfigureOutputChannel : Sink
+    public class ConfigureOutputChannel : Sink, INamedElement
     {
         const string ChannelCategory = "Channel";
         const string VoltageCategory = "Pulse Voltage";
         const string TimingCategory = "Pulse Timing";
-        const string CustomTrainCategory = "CustomTrain";
+        const string CustomTrainCategory = "Custom Train";
         const string TriggerCategory = "Pulse Trigger";
         const double MinVoltage = -10;
         const double MaxVoltage = 10;
@@ -26,12 +24,16 @@ namespace Bonsai.PulsePal
         const double MaxTimePeriod = 3600;
         const int TimeDecimalPlaces = 4;
 
+        string INamedElement.Name => Channel == 0
+            ? nameof(ConfigureOutputChannel)
+            : $"ConfigureOutput{Channel}";
+
         /// <summary>
         /// Gets or sets the name of the serial port used to communicate with the
         /// Pulse Pal device.
         /// </summary>
         [Category(ChannelCategory)]
-        [TypeConverter(typeof(SerialPortNameConverter))]
+        [TypeConverter(typeof(PortNameConverter))]
         [Description("The name of the serial port used to communicate with the Pulse Pal device.")]
         public string PortName { get; set; }
 
@@ -40,7 +42,7 @@ namespace Bonsai.PulsePal
         /// </summary>
         [Category(ChannelCategory)]
         [Description("The output channel to configure.")]
-        public OutputChannel Channel { get; set; } = OutputChannel.Channel1;
+        public OutputChannel Channel { get; set; }
 
         /// <summary>
         /// Gets or sets a value specifying whether to use biphasic or
@@ -89,14 +91,14 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The duration of the first phase of the pulse, in seconds.")]
-        public double Phase1Duration { get; set; }
+        public double Phase1Duration { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the interval between the first and second phase of a biphasic pulse,
-        /// in the range [0.0001, 3600] seconds.
+        /// in the range [0, 3600] seconds.
         /// </summary>
         [Category(TimingCategory)]
-        [Range(MinTimePeriod, MaxTimePeriod)]
+        [Range(0, MaxTimePeriod)]
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The interval between the first and second phase of a biphasic pulse, in seconds.")]
@@ -111,7 +113,7 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The duration of the second phase of the pulse, in seconds.")]
-        public double Phase2Duration { get; set; }
+        public double Phase2Duration { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the interval between pulses, in the range [0.0001, 3600] seconds.
@@ -121,17 +123,17 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The interval between pulses, in seconds.")]
-        public double InterPulseInterval { get; set; }
+        public double InterPulseInterval { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the duration of a pulse burst, in the range
-        /// [0.0001, 3600] seconds.
+        /// [0, 3600] seconds. If set to zero, bursts are disabled.
         /// </summary>
         [Category(TimingCategory)]
-        [Range(MinTimePeriod, MaxTimePeriod)]
+        [Range(0, MaxTimePeriod)]
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
-        [Description("The duration of a pulse burst, in seconds.")]
+        [Description("The duration of a pulse burst, in seconds. If set to zero, bursts are disabled.")]
         public double BurstDuration { get; set; }
 
         /// <summary>
@@ -143,7 +145,7 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The duration of the off-time between bursts, in seconds.")]
-        public double InterBurstInterval { get; set; }
+        public double InterBurstInterval { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the duration of the pulse train, in the range
@@ -154,7 +156,7 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The duration of the pulse train, in seconds.")]
-        public double PulseTrainDuration { get; set; }
+        public double PulseTrainDuration { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the delay to start the pulse train, in the range
@@ -165,7 +167,7 @@ namespace Bonsai.PulsePal
         [Precision(TimeDecimalPlaces, MinTimePeriod)]
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The delay to start the pulse train, in seconds.")]
-        public double PulseTrainDelay { get; set; }
+        public double PulseTrainDelay { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets a value specifying the identity of the custom pulse train
@@ -227,31 +229,59 @@ namespace Bonsai.PulsePal
         public override IObservable<TSource> Process<TSource>(IObservable<TSource> source)
         {
             return Observable.Using(
-                cancellationToken => PulsePalManager.ReserveConnectionAsync(PortName),
-                (connection, cancellationToken) => Task.FromResult(source.Do(input =>
+                () => PulsePalManager.ReserveConnection(PortName),
+                connection => source.Do(input =>
                 {
                     lock (connection.PulsePal)
                     {
-                        var channel = Channel;
-                        connection.PulsePal.SetBiphasic(channel, Biphasic);
-                        connection.PulsePal.SetPhase1Voltage(channel, Phase1Voltage);
-                        connection.PulsePal.SetPhase2Voltage(channel, Phase2Voltage);
-                        connection.PulsePal.SetPhase1Duration(channel, Phase1Duration);
-                        connection.PulsePal.SetInterPhaseInterval(channel, InterPhaseInterval);
-                        connection.PulsePal.SetPhase2Duration(channel, Phase2Duration);
-                        connection.PulsePal.SetInterPulseInterval(channel, InterPulseInterval);
-                        connection.PulsePal.SetBurstDuration(channel, BurstDuration);
-                        connection.PulsePal.SetInterBurstInterval(channel, InterBurstInterval);
-                        connection.PulsePal.SetPulseTrainDuration(channel, PulseTrainDuration);
-                        connection.PulsePal.SetPulseTrainDelay(channel, PulseTrainDelay);
-                        connection.PulsePal.SetTriggerOnChannel1(channel, TriggerOnChannel1);
-                        connection.PulsePal.SetTriggerOnChannel2(channel, TriggerOnChannel2);
-                        connection.PulsePal.SetCustomTrainIdentity(channel, CustomTrainIdentity);
-                        connection.PulsePal.SetCustomTrainTarget(channel, CustomTrainTarget);
-                        connection.PulsePal.SetCustomTrainLoop(channel, CustomTrainLoop);
-                        connection.PulsePal.SetRestingVoltage(channel, RestingVoltage);
+                        Configure(connection.PulsePal);
                     }
-                })));
+                }));
+        }
+
+        /// <summary>
+        /// Configures the output channel parameters on every Pulse Pal device
+        /// in the observable sequence.
+        /// </summary>
+        /// <param name="source">
+        /// The sequence of Pulse Pal devices to configure.
+        /// </param>
+        /// <returns>
+        /// An observable sequence that is identical to the <paramref name="source"/>
+        /// sequence but where there is an additional side effect of configuring the
+        /// output channel parameters on each Pulse Pal device.
+        /// </returns>
+        public IObservable<PulsePal> Process(IObservable<PulsePal> source)
+        {
+            return source.Do(Configure);
+        }
+
+        internal void Configure(PulsePal pulsePal)
+        {
+            var channel = Channel;
+            pulsePal.SetBiphasic(channel, Biphasic);
+            pulsePal.SetPhase1Voltage(channel, Phase1Voltage);
+            pulsePal.SetPhase2Voltage(channel, Phase2Voltage);
+            pulsePal.SetPhase1Duration(channel, Phase1Duration);
+            pulsePal.SetInterPhaseInterval(channel, InterPhaseInterval);
+            pulsePal.SetPhase2Duration(channel, Phase2Duration);
+            pulsePal.SetInterPulseInterval(channel, InterPulseInterval);
+            pulsePal.SetBurstDuration(channel, BurstDuration);
+            pulsePal.SetInterBurstInterval(channel, InterBurstInterval);
+            pulsePal.SetPulseTrainDuration(channel, PulseTrainDuration);
+            pulsePal.SetPulseTrainDelay(channel, PulseTrainDelay);
+            pulsePal.SetTriggerOnChannel1(channel, TriggerOnChannel1);
+            pulsePal.SetTriggerOnChannel2(channel, TriggerOnChannel2);
+            pulsePal.SetCustomTrainIdentity(channel, CustomTrainIdentity);
+            pulsePal.SetCustomTrainTarget(channel, CustomTrainTarget);
+            pulsePal.SetCustomTrainLoop(channel, CustomTrainLoop);
+            pulsePal.SetRestingVoltage(channel, RestingVoltage);
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return Channel == 0 ? nameof(ConfigureOutputChannel) : $"{Channel}";
         }
     }
 }
