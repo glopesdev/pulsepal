@@ -16,13 +16,13 @@ namespace Bonsai.PulsePal
         const string TimingCategory = "Pulse Timing";
         const string CustomTrainCategory = "Custom Train";
         const string TriggerCategory = "Pulse Trigger";
-        const double MinVoltage = -10;
-        const double MaxVoltage = 10;
-        const int VoltageDecimalPlaces = 3;
-        const double VoltageIncrement = 0.001;
-        const double MinTimePeriod = 0.0001;
-        const double MaxTimePeriod = 3600;
-        const int TimeDecimalPlaces = 4;
+        const double MinVoltage = OutputChannelParameterConfiguration.MinVoltage;
+        const double MaxVoltage = OutputChannelParameterConfiguration.MaxVoltage;
+        const int VoltageDecimalPlaces = OutputChannelParameterConfiguration.VoltageDecimalPlaces;
+        const double VoltageIncrement = OutputChannelParameterConfiguration.VoltageIncrement;
+        const double MinTimePeriod = OutputChannelParameterConfiguration.MinTimePeriod;
+        const double MaxTimePeriod = OutputChannelParameterConfiguration.MaxTimePeriod;
+        const int TimeDecimalPlaces = OutputChannelParameterConfiguration.TimeDecimalPlaces;
 
         string INamedElement.Name => Channel == 0
             ? nameof(ConfigureOutputChannel)
