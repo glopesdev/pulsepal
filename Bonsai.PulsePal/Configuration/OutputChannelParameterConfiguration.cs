@@ -3,9 +3,10 @@
 namespace Bonsai.PulsePal
 {
     /// <summary>
-    /// Provides an abstract base class for Pulse Pal channel parameters.
+    /// Provides an abstract base class for configuring Pulse Pal
+    /// output channel parameters.
     /// </summary>
-    public abstract class OutputChannelParameterConfiguration
+    public abstract class OutputChannelParameterConfiguration : ChannelParameterConfiguration
     {
         internal const double MinVoltage = -10;
         internal const double MaxVoltage = 10;
@@ -20,12 +21,5 @@ namespace Bonsai.PulsePal
         /// </summary>
         [Description("Specifies the output channel to configure.")]
         public OutputChannel Channel { get; set; } = OutputChannel.Channel1;
-
-        /// <summary>
-        /// Applies the channel parameter configuration to the specified
-        /// Pulse Pal device.
-        /// </summary>
-        /// <param name="device">The Pulse Pal device to configure.</param>
-        public abstract void Configure(PulsePal device);
     }
 }

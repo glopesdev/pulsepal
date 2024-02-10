@@ -1,15 +1,15 @@
 ﻿using System;
 using System.ComponentModel;
-using Bonsai.Expressions;
 
 namespace Bonsai.PulsePal
 {
     /// <summary>
-    /// Provides an abstract base class for polymorphic operators.
+    /// Provides an abstract base class for polymorphic combinators.
     /// </summary>
-    public abstract class PolymorphicCombinatorBuilder : ExpressionBuilder, ICustomTypeDescriptor
+    [Combinator]
+    public abstract class PolymorphicCombinator : ICustomTypeDescriptor
     {
-        internal PolymorphicCombinatorBuilder()
+        internal PolymorphicCombinator()
         {
         }
 

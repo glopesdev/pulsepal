@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel;
-using System.Linq;
-using System.Linq.Expressions;
+using System.Reactive.Linq;
 using System.Xml.Serialization;
 
 namespace Bonsai.PulsePal
@@ -29,11 +28,10 @@ namespace Bonsai.PulsePal
     [XmlInclude(typeof(CustomTrainLoopConfiguration))]
     [XmlInclude(typeof(RestingVoltageConfiguration))]
     [XmlInclude(typeof(TriggerModeConfiguration))]
+    [WorkflowElementCategory(ElementCategory.Sink)]
     [Description("Configures a single channel parameter on a Pulse Pal device.")]
-    public class ConfigureChannelParameter : PolymorphicCombinatorBuilder
+    public class ConfigureChannelParameter : PolymorphicCombinator
     {
-        static readonly Range<int> argumentRange = Range.Create(lowerBound: 1, upperBound: 1);
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureChannelParameter"/> class.
         /// </summary>
@@ -42,28 +40,74 @@ namespace Bonsai.PulsePal
             Parameter = new BiphasicConfiguration();
         }
 
-        /// <inheritdoc/>
-        public override Range<int> ArgumentRange => argumentRange;
+        /// <summary>
+        /// Gets or sets the name of the serial port used to communicate with the
+        /// Pulse Pal device.
+        /// </summary>
+        [TypeConverter(typeof(PortNameConverter))]
+        [Description("The name of the serial port used to communicate with the Pulse Pal device.")]
+        public string PortName { get; set; }
 
         /// <summary>
-        /// Gets or sets the operator used to configure specific Pulse Pal channel parameters.
+        /// Gets or sets the channel parameter to configure.
         /// </summary>
         [DesignOnly(true)]
         [Externalizable(false)]
         [RefreshProperties(RefreshProperties.All)]
         [Category(nameof(CategoryAttribute.Design))]
-        [Description("The operator used to configure specific Pulse Pal channel parameters.")]
+        [Description("The channel parameter to configure.")]
         [TypeConverter(typeof(CombinatorTypeConverter))]
-        public object Parameter
+        public ChannelParameterConfiguration Parameter
         {
-            get { return Operator; }
-            set { Operator = value; }
+            get { return (ChannelParameterConfiguration)Operator; }
+            set { Operator = value ?? throw new ArgumentNullException(nameof(value)); }
         }
 
-        /// <inheritdoc/>
-        public override Expression Build(IEnumerable<Expression> arguments)
+        /// <summary>
+        /// Configures a single channel parameter on the Pulse Pal device whenever
+        /// an observable sequence emits a notification.
+        /// </summary>
+        /// <typeparam name="TSource">
+        /// The type of the elements in the <paramref name="source"/> sequence.
+        /// </typeparam>
+        /// <param name="source">
+        /// The sequence containing the notifications used to trigger configuration
+        /// of the Pulse Pal channel parameter.
+        /// </param>
+        /// <returns>
+        /// An observable sequence that is identical to the <paramref name="source"/>
+        /// sequence but where there is an additional side effect of configuring a
+        /// single channel parameter on the Pulse Pal device whenever the sequence
+        /// emits a notification.
+        /// </returns>
+        public IObservable<TSource> Process<TSource>(IObservable<TSource> source)
         {
-            return arguments.Single();
+            return Observable.Using(
+                () => PulsePalManager.ReserveConnection(PortName),
+                connection => source.Do(input =>
+                {
+                    lock (connection.PulsePal)
+                    {
+                        Parameter.Configure(connection.PulsePal);
+                    }
+                }));
+        }
+
+        /// <summary>
+        /// Configures a single channel parameter on every Pulse Pal device
+        /// in the observable sequence.
+        /// </summary>
+        /// <param name="source">
+        /// The sequence of Pulse Pal devices to configure.
+        /// </param>
+        /// <returns>
+        /// An observable sequence that is identical to the <paramref name="source"/>
+        /// sequence but where there is an additional side effect of configuring a
+        /// single channel parameter on each Pulse Pal device.
+        /// </returns>
+        public IObservable<PulsePal> Process(IObservable<PulsePal> source)
+        {
+            return source.Do(Parameter.Configure);
         }
     }
 }
