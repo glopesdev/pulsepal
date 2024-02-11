@@ -1,7 +1,6 @@
 ﻿using OpenCV.Net;
 using System;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.Reactive.Linq;
 
 namespace Bonsai.PulsePal
@@ -14,8 +13,8 @@ namespace Bonsai.PulsePal
             PulseId = 1;
         }
 
-        [Description("The name of the serial port.")]
-        [Editor("Bonsai.PulsePal.Design.PulsePalConfigurationEditor, Bonsai.PulsePal.Design", typeof(UITypeEditor))]
+        [TypeConverter(typeof(PortNameConverter))]
+        [Description("The name of the serial port used to communicate with the Pulse Pal device.")]
         public string PortName { get; set; }
 
         [Description("The identifier of the custom pulse train.")]

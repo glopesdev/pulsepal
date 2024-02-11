@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Drawing.Design;
 using System.Reactive.Linq;
 
 namespace Bonsai.PulsePal
@@ -8,8 +7,8 @@ namespace Bonsai.PulsePal
     [Description("Triggers the specified output channels to begin playing their pulse sequences.")]
     public class TriggerOutput : Sink
     {
-        [Description("The name of the serial port.")]
-        [Editor("Bonsai.PulsePal.Design.PulsePalConfigurationEditor, Bonsai.PulsePal.Design", typeof(UITypeEditor))]
+        [TypeConverter(typeof(PortNameConverter))]
+        [Description("The name of the serial port used to communicate with the Pulse Pal device.")]
         public string PortName { get; set; }
 
         [Description("A value representing the bitmask of channels to trigger.")]
