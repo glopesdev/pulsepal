@@ -749,7 +749,7 @@ namespace Bonsai.PulsePal
 
             readonly int GetVoltageSteps(decimal volts)
             {
-                return (int)(decimal.Ceiling((volts + 10) / 20) * device.dacMaxValue);
+                return (int)decimal.Ceiling((volts + 10) / 20 * device.dacMaxValue);
             }
 
             readonly uint GetTimeCycles(decimal seconds)
