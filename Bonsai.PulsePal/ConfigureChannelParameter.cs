@@ -29,6 +29,7 @@ namespace Bonsai.PulsePal
     [XmlInclude(typeof(CustomTrainLoopConfiguration))]
     [XmlInclude(typeof(RestingVoltageConfiguration))]
     [XmlInclude(typeof(TriggerModeConfiguration))]
+    [XmlInclude(typeof(ContinuousLoopConfiguration))]
     [WorkflowElementCategory(ElementCategory.Sink)]
     [Description("Configures a single channel parameter on a Pulse Pal device.")]
     public class ConfigureChannelParameter : PolymorphicCombinator, INamedElement
