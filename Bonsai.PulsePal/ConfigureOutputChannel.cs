@@ -210,6 +210,14 @@ namespace Bonsai.PulsePal
         public bool TriggerOnChannel2 { get; set; }
 
         /// <summary>
+        /// Gets or sets a value specifying whether to set the output channel in
+        /// continuous loop mode.
+        /// </summary>
+        [Category(TriggerCategory)]
+        [Description("Specifies whether to set the output channel in continuous loop mode.")]
+        public bool ContinuousLoop { get; set; }
+
+        /// <summary>
         /// Configures the output channel parameters on the Pulse Pal device whenever
         /// an observable sequence emits a notification.
         /// </summary>
@@ -276,6 +284,7 @@ namespace Bonsai.PulsePal
             pulsePal.SetCustomTrainTarget(channel, CustomTrainTarget);
             pulsePal.SetCustomTrainLoop(channel, CustomTrainLoop);
             pulsePal.SetRestingVoltage(channel, RestingVoltage);
+            pulsePal.SetContinuousLoop(channel, ContinuousLoop);
         }
 
         /// <inheritdoc/>
