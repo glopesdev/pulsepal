@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// output channel, i.e. the voltage between phases, pulses and pulse trains.
     /// </summary>
     [DisplayName(nameof(ParameterCode.RestingVoltage))]
+    [Description("Specifies the resting voltage on this output channel.")]
     public class RestingVoltageConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

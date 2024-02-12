@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// and second phases of biphasic pulses.
     /// </summary>
     [DisplayName(nameof(ParameterCode.InterPhaseInterval))]
+    [Description("Specifies the interval between the first and second phases of biphasic pulses.")]
     public class InterPhaseIntervalConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

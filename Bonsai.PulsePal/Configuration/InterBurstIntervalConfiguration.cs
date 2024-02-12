@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// off-time between bursts.
     /// </summary>
     [DisplayName(nameof(ParameterCode.InterBurstInterval))]
+    [Description("Specifies the duration of the off-time between bursts.")]
     public class InterBurstIntervalConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

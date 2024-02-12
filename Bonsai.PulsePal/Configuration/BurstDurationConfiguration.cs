@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// burst when using burst mode.
     /// </summary>
     [DisplayName(nameof(ParameterCode.BurstDuration))]
+    [Description("Specifies the duration of a pulse burst when using burst mode.")]
     public class BurstDurationConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

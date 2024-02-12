@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// phase of each pulse.
     /// </summary>
     [DisplayName(nameof(ParameterCode.Phase1Duration))]
+    [Description("Specifies the duration for the first phase of each pulse.")]
     public class Phase1DurationConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

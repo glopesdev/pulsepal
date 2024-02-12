@@ -6,6 +6,7 @@ namespace Bonsai.PulsePal
     /// Represents configuration parameters specifying the behavior of a trigger channel.
     /// </summary>
     [DisplayName(nameof(ParameterCode.TriggerMode))]
+    [Description("Specifies the behavior of a trigger channel.")]
     public class TriggerModeConfiguration : TriggerChannelParameterConfiguration
     {
         /// <summary>

@@ -6,6 +6,7 @@ namespace Bonsai.PulsePal
     /// Represents configuration parameters specifying the interval between pulses.
     /// </summary>
     [DisplayName(nameof(ParameterCode.InterPulseInterval))]
+    [Description("Specifies the interval between pulses.")]
     public class InterPulseIntervalConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>
