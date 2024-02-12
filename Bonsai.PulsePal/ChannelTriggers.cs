@@ -6,7 +6,7 @@ namespace Bonsai.PulsePal
     /// Specifies which output channels to start on a soft-trigger command.
     /// </summary>
     [Flags]
-    public enum TriggerChannels
+    public enum ChannelTriggers
     {
         /// <summary>
         /// Start stimulation on output channel 1.
