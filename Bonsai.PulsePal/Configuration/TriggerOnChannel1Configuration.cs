@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// trigger the output channel.
     /// </summary>
     [DisplayName(nameof(ParameterCode.TriggerOnChannel1))]
+    [Description("Specifies whether trigger channel 1 can trigger the output channel.")]
     public class TriggerOnChannel1Configuration : OutputChannelParameterConfiguration
     {
         /// <summary>

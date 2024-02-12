@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Reactive.Linq;
 using System.Xml.Serialization;
+using Bonsai.Expressions;
 
 namespace Bonsai.PulsePal
 {
@@ -30,7 +31,7 @@ namespace Bonsai.PulsePal
     [XmlInclude(typeof(TriggerModeConfiguration))]
     [WorkflowElementCategory(ElementCategory.Sink)]
     [Description("Configures a single channel parameter on a Pulse Pal device.")]
-    public class ConfigureChannelParameter : PolymorphicCombinator
+    public class ConfigureChannelParameter : PolymorphicCombinator, INamedElement
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigureChannelParameter"/> class.
@@ -39,6 +40,8 @@ namespace Bonsai.PulsePal
         {
             Parameter = new BiphasicConfiguration();
         }
+
+        string INamedElement.Name => $"Set{ExpressionBuilder.GetElementDisplayName(Parameter)}";
 
         /// <summary>
         /// Gets or sets the name of the serial port used to communicate with the

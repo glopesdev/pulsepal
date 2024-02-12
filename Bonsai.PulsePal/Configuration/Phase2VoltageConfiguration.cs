@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// phase of each pulse.
     /// </summary>
     [DisplayName(nameof(ParameterCode.Phase2Voltage))]
+    [Description("Specifies the voltage for the second phase of each pulse.")]
     public class Phase2VoltageConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// will produce either monophasic or biphasic square pulses.
     /// </summary>
     [DisplayName(nameof(ParameterCode.Biphasic))]
+    [Description("Specifies whether the channel will generate monophasic or biphasic square pulses.")]
     public class BiphasicConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

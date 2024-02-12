@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// will loop its custom pulse train.
     /// </summary>
     [DisplayName(nameof(ParameterCode.CustomTrainLoop))]
+    [Description("Specifies whether the output channel will loop its custom pulse train.")]
     public class CustomTrainLoopConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

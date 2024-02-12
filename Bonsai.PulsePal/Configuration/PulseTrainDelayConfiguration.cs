@@ -3,10 +3,11 @@
 namespace Bonsai.PulsePal
 {
     /// <summary>
-    /// Represents configuration parameters specifying a delay between the arrival of
+    /// Represents configuration parameters specifying the delay between the arrival of
     /// a trigger and when the channel begins its pulse train.
     /// </summary>
     [DisplayName(nameof(ParameterCode.PulseTrainDelay))]
+    [Description("Specifies the delay between the arrival of a trigger and when the channel begins its pulse train.")]
     public class PulseTrainDelayConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

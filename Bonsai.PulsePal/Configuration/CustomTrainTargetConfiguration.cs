@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// in the custom train configured on this output channel.
     /// </summary>
     [DisplayName(nameof(ParameterCode.CustomTrainTarget))]
+    [Description("Specifies the interpretation of pulse times in the channel custom pulse train.")]
     public class CustomTrainTargetConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>

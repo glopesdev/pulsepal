@@ -7,6 +7,7 @@ namespace Bonsai.PulsePal
     /// entire pulse train.
     /// </summary>
     [DisplayName(nameof(ParameterCode.PulseTrainDuration))]
+    [Description("Specifies the duration of the entire pulse train.")]
     public class PulseTrainDurationConfiguration : OutputChannelParameterConfiguration
     {
         /// <summary>
