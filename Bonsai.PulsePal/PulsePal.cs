@@ -525,7 +525,7 @@ namespace Bonsai.PulsePal
         /// <param name="channels">
         /// Specifies which output channels to start.
         /// </param>
-        public void TriggerChannels(TriggerChannels channels)
+        public void TriggerOutputChannels(ChannelTriggers channels)
         {
             using var writer = new CommandWriter(this);
             writer.Write(OpMenu);
