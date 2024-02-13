@@ -8,12 +8,12 @@ namespace Bonsai.PulsePal
     /// </summary>
     public abstract class OutputChannelParameterConfiguration : ChannelParameterConfiguration
     {
-        internal const double MinVoltage = -10;
-        internal const double MaxVoltage = 10;
+        internal const double MinVoltage = PulsePal.MinVoltage;
+        internal const double MaxVoltage = PulsePal.MaxVoltage;
+        internal const double MinTimePeriod = PulsePal.MinTimePeriod;
+        internal const double MaxTimePeriod = PulsePal.MaxTimePeriod;
         internal const int VoltageDecimalPlaces = 3;
         internal const double VoltageIncrement = 0.001;
-        internal const double MinTimePeriod = 0.0001;
-        internal const double MaxTimePeriod = 3600;
         internal const int TimeDecimalPlaces = 4;
 
         /// <summary>
