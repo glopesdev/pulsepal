@@ -455,7 +455,10 @@ namespace Bonsai.PulsePal
         /// Sends a sequence of onset times and voltages describing a train of pulses.
         /// </summary>
         /// <param name="id">The identity of the custom pulse train to program.</param>
-        /// <param name="pulseTimes">The array of pulse onset times, in seconds.</param>
+        /// <param name="pulseTimes">
+        /// The array of pulse onset times, where each time is specified in seconds
+        /// from the start of the pulse train.
+        /// </param>
         /// <param name="pulseVoltages">
         /// The array of pulse voltages, with one voltage per pulse.
         /// </param>
@@ -503,7 +506,7 @@ namespace Bonsai.PulsePal
             writer.Write(nPulses);
             for (int i = 0; i < pulseTimes.Length; i++)
             {
-                writer.WriteTime(pulseTimes[i]);
+                writer.WriteMonotonicTime(pulseTimes[i]);
             }
 
             for (int i = 0; i < pulseVoltages.Length; i++)
@@ -553,7 +556,7 @@ namespace Bonsai.PulsePal
             writer.Write(nPulses);
             for (int i = 0; i < pulseTrain.Length; i++)
             {
-                writer.WriteTime(pulseTrain[i].Time);
+                writer.WriteMonotonicTime(pulseTrain[i].Time);
             }
 
             for (int i = 0; i < pulseTrain.Length; i++)
@@ -604,7 +607,7 @@ namespace Bonsai.PulsePal
             writer.Write(nPulses);
             for (int i = 0; i < nPulses; i++)
             {
-                writer.WriteTime(pulseTrain[0, i]);
+                writer.WriteMonotonicTime(pulseTrain[0, i]);
             }
 
             for (int i = 0; i < nPulses; i++)
@@ -645,13 +648,18 @@ namespace Bonsai.PulsePal
                 throw new ArgumentNullException(nameof(pulseVoltages));
             }
 
-            var pulseTimes = new double[pulseVoltages.Length];
-            for (int i = 0; i < pulseTimes.Length; i++)
+            using var writer = new CommandWriter(this);
+            writer.WriteProgramPulseTrainHeader(id);
+            writer.Write((uint)pulseVoltages.Length);
+            for (int i = 0; i < pulseVoltages.Length; i++)
             {
-                pulseTimes[i] = samplingPeriod * i;
+                writer.WriteMonotonicTime(samplingPeriod * i);
             }
 
-            SendCustomPulseTrain(id, pulseTimes, pulseVoltages);
+            for (int i = 0; i < pulseVoltages.Length; i++)
+            {
+                writer.WriteVoltage(pulseVoltages[i]);
+            }
         }
 
         /// <summary>
@@ -808,11 +816,13 @@ namespace Bonsai.PulsePal
         struct CommandWriter : IDisposable
         {
             int offset;
+            double previousTime;
             readonly PulsePal device;
 
             public CommandWriter(PulsePal pulsePal)
             {
                 offset = 0;
+                previousTime = -MinTimePeriod;
                 device = pulsePal;
             }
 
@@ -851,11 +861,30 @@ namespace Bonsai.PulsePal
             public void WriteTime(double seconds)
             {
                 var cycles = GetTimeCycles((decimal)seconds);
+                ThrowIfCyclesOutOfRange(cycles, nameof(seconds));
                 Write(cycles);
+            }
+
+            public void WriteMonotonicTime(double seconds)
+            {
+                if (seconds - previousTime < MinTimePeriod)
+                {
+                    ThrowAndReset(new ArgumentException(
+                        "The array of pulse times must be monotonically increasing.",
+                        nameof(seconds)));
+                }
+
+                WriteTime(seconds);
+                previousTime = seconds;
             }
 
             public void WriteVoltage(double volts)
             {
+                if (volts < MinVoltage || volts > MaxVoltage)
+                {
+                    ThrowAndReset(new ArgumentOutOfRangeException(nameof(volts)));
+                }
+
                 var steps = GetVoltageSteps((decimal)volts);
                 if (device.dacMaxValue > byte.MaxValue)
                 {
@@ -874,7 +903,10 @@ namespace Bonsai.PulsePal
 
             public void WriteProgramHeader(OutputChannel channel, ParameterCode parameter)
             {
-                if (channel == 0) throw new ArgumentOutOfRangeException(nameof(channel));
+                if (channel == 0)
+                {
+                    ThrowAndReset(new ArgumentOutOfRangeException(nameof(channel)));
+                }
 
                 Write(OpMenu);
                 Write(ProgramParam);
@@ -888,7 +920,7 @@ namespace Bonsai.PulsePal
                 {
                     CustomTrainId.CustomTrain1 => ProgramPulseTrain1,
                     CustomTrainId.CustomTrain2 => ProgramPulseTrain2,
-                    _ => throw new ArgumentException("Invalid pulse train id.", nameof(id))
+                    _ => ThrowAndReset<byte>(new ArgumentException("Invalid pulse train id.", nameof(id)))
                 };
 
                 Write(OpMenu);
@@ -902,25 +934,38 @@ namespace Bonsai.PulsePal
 
             readonly uint GetTimeCycles(decimal seconds)
             {
-                var cycles = (uint)(seconds * CycleFrequency);
-                ThrowIfCyclesOutOfRange(cycles, nameof(seconds));
-                return cycles;
+                return (uint)(seconds * CycleFrequency);
             }
 
-            static void ThrowIfCyclesOutOfRange(uint cycles, string paramName)
+            void ThrowIfCyclesOutOfRange(uint cycles, string paramName)
             {
                 if (cycles > MaxCyclePeriod)
                 {
-                    throw new ArgumentOutOfRangeException(
+                    ThrowAndReset(new ArgumentOutOfRangeException(
                         "The specified value exceeds the maximum allowed Pulse Pal time interval.",
-                        paramName);
+                        paramName));
                 }
+            }
+
+            void ThrowAndReset(Exception ex)
+            {
+                offset = 0;
+                throw ex;
+            }
+
+            TResult ThrowAndReset<TResult>(Exception ex)
+            {
+                offset = 0;
+                throw ex;
             }
 
             public void Dispose()
             {
-                device.serialPort.Write(device.commandBuffer, 0, offset);
-                offset = 0;
+                if (offset > 0)
+                {
+                    device.serialPort.Write(device.commandBuffer, 0, offset);
+                    offset = 0;
+                }
             }
         }
     }
