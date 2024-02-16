@@ -20,7 +20,7 @@ namespace Bonsai.PulsePal
         const int CycleFrequency = 20000;
         const int MaxCyclePeriod = 36000000;
         const int MaxPulseLength = 1000;
-        const int MaxDataBytes = 35;
+        const int MaxDataBytes = 8192;
 
         const byte OpMenu                = 213;
         const byte Handshake             = 72;
@@ -65,7 +65,8 @@ namespace Bonsai.PulsePal
 
             firmwareVersion = -1;
             initialized = new();
-            commandBuffer = new byte[MaxDataBytes];
+            serialPort.WriteBufferSize = MaxDataBytes;
+            commandBuffer = new byte[serialPort.WriteBufferSize];
             readBuffer = new byte[serialPort.ReadBufferSize];
         }
 
