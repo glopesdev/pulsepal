@@ -11,11 +11,16 @@ namespace Bonsai.PulsePal
     /// </summary>
     public sealed class PulsePal : IDisposable
     {
+        internal const double MinVoltage = -10;
+        internal const double MaxVoltage = 10;
+        internal const double MinTimePeriod = 0.0001;
+        internal const double MaxTimePeriod = 3600;
+
         const int BaudRate = 115200;
         const int CycleFrequency = 20000;
         const int MaxCyclePeriod = 36000000;
         const int MaxPulseLength = 1000;
-        const int MaxDataBytes = 35;
+        const int MaxDataBytes = 8192;
 
         const byte OpMenu                = 213;
         const byte Handshake             = 72;
@@ -60,7 +65,8 @@ namespace Bonsai.PulsePal
 
             firmwareVersion = -1;
             initialized = new();
-            commandBuffer = new byte[MaxDataBytes];
+            serialPort.WriteBufferSize = MaxDataBytes;
+            commandBuffer = new byte[serialPort.WriteBufferSize];
             readBuffer = new byte[serialPort.ReadBufferSize];
         }
 
@@ -450,8 +456,13 @@ namespace Bonsai.PulsePal
         /// Sends a sequence of onset times and voltages describing a train of pulses.
         /// </summary>
         /// <param name="id">The identity of the custom pulse train to program.</param>
-        /// <param name="pulseTimes">The array of pulse onset times, in seconds.</param>
-        /// <param name="pulseVoltages">The array of pulse voltages, with one voltage per pulse.</param>
+        /// <param name="pulseTimes">
+        /// The array of pulse onset times, where each time is specified in seconds
+        /// from the start of the pulse train.
+        /// </param>
+        /// <param name="pulseVoltages">
+        /// The array of pulse voltages, with one voltage per pulse.
+        /// </param>
         /// <exception cref="ArgumentException">
         /// The specified pulse train <paramref name="id"/> is invalid.
         /// </exception>
@@ -470,13 +481,6 @@ namespace Bonsai.PulsePal
         /// </remarks>
         public void SendCustomPulseTrain(CustomTrainId id, double[] pulseTimes, double[] pulseVoltages)
         {
-            var command = id switch
-            {
-                CustomTrainId.CustomTrain1 => ProgramPulseTrain1,
-                CustomTrainId.CustomTrain2 => ProgramPulseTrain2,
-                _ => throw new ArgumentException("Invalid pulse train id.", nameof(id))
-            };
-
             if (pulseTimes == null)
             {
                 throw new ArgumentNullException(nameof(pulseTimes));
@@ -499,18 +503,158 @@ namespace Bonsai.PulsePal
             }
 
             using var writer = new CommandWriter(this);
-            writer.Write(OpMenu);
-            writer.Write(command);
-            if (firmwareVersion < 20)
-            {
-                // USB packet correction byte
-                writer.Write(0);
-            }
-
+            writer.WriteProgramPulseTrainHeader(id);
             writer.Write(nPulses);
             for (int i = 0; i < pulseTimes.Length; i++)
             {
-                writer.WriteTime(pulseTimes[i]);
+                writer.WriteMonotonicTime(pulseTimes[i]);
+            }
+
+            for (int i = 0; i < pulseVoltages.Length; i++)
+            {
+                writer.WriteVoltage(pulseVoltages[i]);
+            }
+        }
+
+        /// <summary>
+        /// Sends a sequence of onset times and voltages describing a train of pulses.
+        /// </summary>
+        /// <param name="id">The identity of the custom pulse train to program.</param>
+        /// <param name="pulseTrain">
+        /// The array specifying all pulse onset times and voltages, respectively in
+        /// seconds and volts.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// The specified pulse train <paramref name="id"/> is invalid.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="pulseTrain"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// The maximum length of 1,000 pulses has been exceeded.
+        /// </exception>
+        /// <remarks>
+        /// Pulses that are continuous or overlapping will merge. If an output channel is set
+        /// to produce biphasic pulses, the voltage specified for each pulse is sign-inverted
+        /// for the second phase, i.e. if +5 V is used for phase 1, -5 V is used automatically
+        /// for phase 2.
+        /// </remarks>
+        public void SendCustomPulseTrain(CustomTrainId id, PulseOnset[] pulseTrain)
+        {
+            if (pulseTrain == null)
+            {
+                throw new ArgumentNullException(nameof(pulseTrain));
+            }
+
+            var nPulses = (uint)pulseTrain.Length;
+            if (nPulses > MaxPulseLength)
+            {
+                throw new ArgumentOutOfRangeException("Exceeded the maximum allowed pulse length.", nameof(pulseTrain));
+            }
+
+            using var writer = new CommandWriter(this);
+            writer.WriteProgramPulseTrainHeader(id);
+            writer.Write(nPulses);
+            for (int i = 0; i < pulseTrain.Length; i++)
+            {
+                writer.WriteMonotonicTime(pulseTrain[i].Time);
+            }
+
+            for (int i = 0; i < pulseTrain.Length; i++)
+            {
+                writer.WriteVoltage(pulseTrain[i].Voltage);
+            }
+        }
+
+        /// <summary>
+        /// Sends a sequence of onset times and voltages describing a train of pulses.
+        /// </summary>
+        /// <param name="id">The identity of the custom pulse train to program.</param>
+        /// <param name="pulseTrain">
+        /// A rectangular array of pulse times and pulse voltages, where the first row
+        /// represents the vector of pulse onset times in seconds, and the second row
+        /// the corresponding vector of pulse voltages in volts.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// The specified pulse train <paramref name="id"/> is invalid.-or-
+        /// <paramref name="pulseTrain"/> does not have exactly two rows.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="pulseTrain"/> is <see langword="null"/>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// The maximum length of 1,000 pulses has been exceeded.
+        /// </exception>
+        public void SendCustomPulseTrain(CustomTrainId id, double[,] pulseTrain)
+        {
+            if (pulseTrain == null)
+            {
+                throw new ArgumentNullException(nameof(pulseTrain));
+            }
+
+            if (pulseTrain.GetLength(0) != 2)
+            {
+                throw new ArgumentException("Array of pulse times and voltages must be of length two in its first dimension.", nameof(pulseTrain));
+            }
+
+            var nPulses = (uint)pulseTrain.GetLength(1);
+            if (nPulses > MaxPulseLength)
+            {
+                throw new ArgumentOutOfRangeException("Exceeded the maximum allowed pulse length.", nameof(pulseTrain));
+            }
+
+            using var writer = new CommandWriter(this);
+            writer.WriteProgramPulseTrainHeader(id);
+            writer.Write(nPulses);
+            for (int i = 0; i < nPulses; i++)
+            {
+                writer.WriteMonotonicTime(pulseTrain[0, i]);
+            }
+
+            for (int i = 0; i < nPulses; i++)
+            {
+                writer.WriteVoltage(pulseTrain[1, i]);
+            }
+        }
+
+        /// <summary>
+        /// Sends a sequence of voltages describing a train of continuous monophasic
+        /// pulses, with periodic onset times.
+        /// </summary>
+        /// <param name="id">The identity of the custom pulse train to program.</param>
+        /// <param name="samplingPeriod">
+        /// The width of all pulses in the train in the range [0.0001, 3600] seconds.
+        /// Pulses are continuous.
+        /// </param>
+        /// <param name="pulseVoltages">
+        /// The array of pulse voltages, with one voltage per pulse.
+        /// </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="samplingPeriod"/> is outside the range [0.0001, 3600]
+        /// seconds.-or-
+        /// The maximum length of 1,000 pulses has been exceeded.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="pulseVoltages"/> is <see langword="null"/>.
+        /// </exception>
+        public void SendCustomWaveform(CustomTrainId id, double samplingPeriod, double[] pulseVoltages)
+        {
+            if (samplingPeriod < MinTimePeriod || samplingPeriod > MaxTimePeriod)
+            {
+                throw new ArgumentOutOfRangeException(nameof(samplingPeriod));
+            }
+
+            if (pulseVoltages == null)
+            {
+                throw new ArgumentNullException(nameof(pulseVoltages));
+            }
+
+            using var writer = new CommandWriter(this);
+            writer.WriteProgramPulseTrainHeader(id);
+            writer.Write((uint)pulseVoltages.Length);
+            for (int i = 0; i < pulseVoltages.Length; i++)
+            {
+                writer.WriteMonotonicTime(samplingPeriod * i);
             }
 
             for (int i = 0; i < pulseVoltages.Length; i++)
@@ -673,11 +817,13 @@ namespace Bonsai.PulsePal
         struct CommandWriter : IDisposable
         {
             int offset;
+            double previousTime;
             readonly PulsePal device;
 
             public CommandWriter(PulsePal pulsePal)
             {
                 offset = 0;
+                previousTime = -MinTimePeriod;
                 device = pulsePal;
             }
 
@@ -716,11 +862,30 @@ namespace Bonsai.PulsePal
             public void WriteTime(double seconds)
             {
                 var cycles = GetTimeCycles((decimal)seconds);
+                ThrowIfCyclesOutOfRange(cycles, nameof(seconds));
                 Write(cycles);
+            }
+
+            public void WriteMonotonicTime(double seconds)
+            {
+                if (seconds - previousTime < MinTimePeriod)
+                {
+                    ThrowAndReset(new ArgumentException(
+                        "The array of pulse times must be monotonically increasing.",
+                        nameof(seconds)));
+                }
+
+                WriteTime(seconds);
+                previousTime = seconds;
             }
 
             public void WriteVoltage(double volts)
             {
+                if (volts < MinVoltage || volts > MaxVoltage)
+                {
+                    ThrowAndReset(new ArgumentOutOfRangeException(nameof(volts)));
+                }
+
                 var steps = GetVoltageSteps((decimal)volts);
                 if (device.dacMaxValue > byte.MaxValue)
                 {
@@ -739,12 +904,28 @@ namespace Bonsai.PulsePal
 
             public void WriteProgramHeader(OutputChannel channel, ParameterCode parameter)
             {
-                if (channel == 0) throw new ArgumentOutOfRangeException(nameof(channel));
+                if (channel == 0)
+                {
+                    ThrowAndReset(new ArgumentOutOfRangeException(nameof(channel)));
+                }
 
                 Write(OpMenu);
                 Write(ProgramParam);
                 Write((byte)parameter);
                 Write((byte)channel);
+            }
+
+            public void WriteProgramPulseTrainHeader(CustomTrainId id)
+            {
+                var command = id switch
+                {
+                    CustomTrainId.CustomTrain1 => ProgramPulseTrain1,
+                    CustomTrainId.CustomTrain2 => ProgramPulseTrain2,
+                    _ => ThrowAndReset<byte>(new ArgumentException("Invalid pulse train id.", nameof(id)))
+                };
+
+                Write(OpMenu);
+                Write(command);
             }
 
             readonly int GetVoltageSteps(decimal volts)
@@ -754,25 +935,38 @@ namespace Bonsai.PulsePal
 
             readonly uint GetTimeCycles(decimal seconds)
             {
-                var cycles = (uint)(seconds * CycleFrequency);
-                ThrowIfCyclesOutOfRange(cycles, nameof(seconds));
-                return cycles;
+                return (uint)(seconds * CycleFrequency);
             }
 
-            static void ThrowIfCyclesOutOfRange(uint cycles, string paramName)
+            void ThrowIfCyclesOutOfRange(uint cycles, string paramName)
             {
                 if (cycles > MaxCyclePeriod)
                 {
-                    throw new ArgumentOutOfRangeException(
+                    ThrowAndReset(new ArgumentOutOfRangeException(
                         "The specified value exceeds the maximum allowed Pulse Pal time interval.",
-                        paramName);
+                        paramName));
                 }
+            }
+
+            void ThrowAndReset(Exception ex)
+            {
+                offset = 0;
+                throw ex;
+            }
+
+            TResult ThrowAndReset<TResult>(Exception ex)
+            {
+                offset = 0;
+                throw ex;
             }
 
             public void Dispose()
             {
-                device.serialPort.Write(device.commandBuffer, 0, offset);
-                offset = 0;
+                if (offset > 0)
+                {
+                    device.serialPort.Write(device.commandBuffer, 0, offset);
+                    offset = 0;
+                }
             }
         }
     }
