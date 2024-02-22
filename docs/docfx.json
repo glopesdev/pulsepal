@@ -51,7 +51,7 @@
     "template": [
       "default",
       "modern",
-      "bonsai",
+      "bonsai/template",
       "template"
     ],
     "globalMetadata": {
