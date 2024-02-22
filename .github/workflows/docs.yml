@@ -20,7 +20,7 @@ jobs:
         uses: microsoft/setup-msbuild@v1
       
       - name: Restore NuGet Packages
-        run: msbuild -t:restore src\Bonsai.PulsePal.sln
+        run: msbuild -t:restore src/Bonsai.PulsePal.sln
 
       - name: Setup DocFX
         run: dotnet tool restore

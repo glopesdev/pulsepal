@@ -22,7 +22,7 @@ jobs:
       uses: NuGet/setup-nuget@v1.2.0
      
     - name: Restore NuGet Packages
-      run: nuget restore Bonsai.PulsePal.sln
+      run: nuget restore src/Bonsai.PulsePal.sln
  
     - name: Build Solution
-      run: msbuild Bonsai.PulsePal.sln /p:Configuration=Release
+      run: msbuild src/Bonsai.PulsePal.sln /p:Configuration=Release
