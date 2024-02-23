@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <Authors>Bonsai Foundation</Authors>
-    <Copyright>Copyright © Bonsai Foundation CIC and Contributors 2015-2024</Copyright>
+    <Authors>Bonsai</Authors>
+    <Copyright>Copyright © Bonsai Foundation CIC and Contributors 2024</Copyright>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <ProjectUrl>https://github.com/bonsai-rx/pulsepal</ProjectUrl>
-    <PackageLicenseUrl>https://bonsai-rx.org/license</PackageLicenseUrl>
-    <PackageIconUrl>https://bonsai-rx.org/assets/images/bonsai.png</PackageIconUrl>
     <PackageOutputPath>..\bin\$(Configuration)</PackageOutputPath>
+    <PackageProjectUrl>https://bonsai-rx.org/pulsepal</PackageProjectUrl>
     <IncludeSymbols Condition="'$(Configuration)'=='Release'">true</IncludeSymbols>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/bonsai-rx/pulsepal.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>icon.png</PackageIcon>
     <VersionSuffix></VersionSuffix>
-    <Features>strict</Features>
+    <LangVersion>9.0</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\LICENSE" PackagePath="/" />
+    <Content Include="..\icon.png" PackagePath="/" />
+  </ItemGroup>
 </Project>
