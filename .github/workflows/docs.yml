@@ -29,6 +29,7 @@ jobs:
 
       - name: Setup Bonsai
         working-directory: .bonsai
+        continue-on-error: true
         run: .\Setup.ps1
 
       - name: Build Documentation
