@@ -16,7 +16,7 @@ namespace Bonsai.PulsePal
         /// </summary>
         [TypeConverter(typeof(DeviceNameConverter))]
         [Description("The name of the Pulse Pal device.")]
-        public string DeviceName { get; set; }
+        public string DeviceName { get; set; } = nameof(PulsePal);
 
         /// <summary>
         /// Writes an observable sequence of text strings to the Pulse Pal oLED display.

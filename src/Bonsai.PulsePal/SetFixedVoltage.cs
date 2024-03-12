@@ -20,7 +20,7 @@ namespace Bonsai.PulsePal
         /// </summary>
         [TypeConverter(typeof(DeviceNameConverter))]
         [Description("The name of the Pulse Pal device.")]
-        public string DeviceName { get; set; }
+        public string DeviceName { get; set; } = nameof(PulsePal);
 
         /// <summary>
         /// Gets or sets a value specifying the output channel to set to a fixed voltage.

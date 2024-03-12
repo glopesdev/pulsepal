@@ -16,7 +16,7 @@ namespace Bonsai.PulsePal
         /// </summary>
         [TypeConverter(typeof(DeviceNameConverter))]
         [Description("The name of the Pulse Pal device.")]
-        public string DeviceName { get; set; }
+        public string DeviceName { get; set; } = nameof(PulsePal);
 
         /// <summary>
         /// Gets or sets a value specifying which output channel triggers to set.
