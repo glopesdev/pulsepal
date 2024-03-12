@@ -81,12 +81,12 @@ namespace Bonsai.PulsePal
         /// sequence but where there is an additional side effect of configuring the
         /// trigger channel parameters on each Pulse Pal device.
         /// </returns>
-        public IObservable<PulsePal> Process(IObservable<PulsePal> source)
+        public IObservable<PulsePalDevice> Process(IObservable<PulsePalDevice> source)
         {
             return source.Do(Configure);
         }
 
-        internal void Configure(PulsePal pulsePal)
+        internal void Configure(PulsePalDevice pulsePal)
         {
             var channel = Channel;
             pulsePal.SetTriggerMode(channel, TriggerMode);

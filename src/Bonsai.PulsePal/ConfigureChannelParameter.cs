@@ -109,7 +109,7 @@ namespace Bonsai.PulsePal
         /// sequence but where there is an additional side effect of configuring a
         /// single channel parameter on each Pulse Pal device.
         /// </returns>
-        public IObservable<PulsePal> Process(IObservable<PulsePal> source)
+        public IObservable<PulsePalDevice> Process(IObservable<PulsePalDevice> source)
         {
             return source.Do(Parameter.Configure);
         }

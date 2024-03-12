@@ -13,8 +13,8 @@ namespace Bonsai.PulsePal
     [Description("Uploads each array of voltages in a sequence to the Pulse Pal device, with periodic onset times.")]
     public class SendCustomWaveform : Sink<Mat>
     {
-        const double MinTimePeriod = PulsePal.MinTimePeriod;
-        const double MaxTimePeriod = PulsePal.MaxTimePeriod;
+        const double MinTimePeriod = PulsePalDevice.MinTimePeriod;
+        const double MaxTimePeriod = PulsePalDevice.MaxTimePeriod;
         const int TimeDecimalPlaces = OutputChannelParameterConfiguration.TimeDecimalPlaces;
 
         /// <summary>

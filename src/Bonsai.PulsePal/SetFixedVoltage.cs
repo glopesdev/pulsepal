@@ -10,8 +10,8 @@ namespace Bonsai.PulsePal
     [Description("Sets a constant voltage on an output channel.")]
     public class SetFixedVoltage : Sink
     {
-        const double MinVoltage = PulsePal.MinVoltage;
-        const double MaxVoltage = PulsePal.MaxVoltage;
+        const double MinVoltage = PulsePalDevice.MinVoltage;
+        const double MaxVoltage = PulsePalDevice.MaxVoltage;
         const int VoltageDecimalPlaces = OutputChannelParameterConfiguration.VoltageDecimalPlaces;
         const double VoltageIncrement = OutputChannelParameterConfiguration.VoltageIncrement;
 

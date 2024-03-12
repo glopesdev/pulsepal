@@ -12,7 +12,7 @@ namespace Bonsai.PulsePal
     /// </summary>
     [DefaultProperty(nameof(OutputChannels))]
     [Description("Creates and configures a serial connection to a Pulse Pal device.")]
-    public class CreatePulsePal : Source<PulsePal>, INamedElement
+    public class CreatePulsePal : Source<PulsePalDevice>, INamedElement
     {
         const string ChannelCategory = "Channel";
 
@@ -54,10 +54,10 @@ namespace Bonsai.PulsePal
         /// Generates an observable sequence that contains the serial interface object.
         /// </summary>
         /// <returns>
-        /// A sequence containing a single instance of the <see cref="PulsePal"/> class
+        /// A sequence containing a single instance of the <see cref="PulsePalDevice"/> class
         /// representing the serial interface to Pulse Pal.
         /// </returns>
-        public override IObservable<PulsePal> Generate()
+        public override IObservable<PulsePalDevice> Generate()
         {
             return Observable.Using(
                 () => PulsePalManager.ReserveConnection(Name, configuration),

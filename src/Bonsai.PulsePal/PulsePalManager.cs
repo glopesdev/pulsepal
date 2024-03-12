@@ -7,7 +7,7 @@ namespace Bonsai.PulsePal
 {
     internal static class PulsePalManager
     {
-        static readonly Dictionary<string, Tuple<PulsePal, RefCountDisposable>> openConnections = new();
+        static readonly Dictionary<string, Tuple<PulsePalDevice, RefCountDisposable>> openConnections = new();
         static readonly object openConnectionsLock = new();
 
         internal static PulsePalDisposable ReserveConnection(string portName)
@@ -17,7 +17,7 @@ namespace Bonsai.PulsePal
 
         internal static PulsePalDisposable ReserveConnection(string portName, PulsePalConfiguration pulsePalConfiguration)
         {
-            var connection = default(Tuple<PulsePal, RefCountDisposable>);
+            var connection = default(Tuple<PulsePalDevice, RefCountDisposable>);
             lock (openConnectionsLock)
             {
                 if (string.IsNullOrEmpty(portName))
@@ -32,7 +32,7 @@ namespace Bonsai.PulsePal
                     var serialPortName = pulsePalConfiguration.PortName;
                     if (string.IsNullOrEmpty(serialPortName)) serialPortName = portName;
 
-                    var pulsePal = new PulsePal(serialPortName);
+                    var pulsePal = new PulsePalDevice(serialPortName);
                     try
                     {
                         pulsePal.Open();
