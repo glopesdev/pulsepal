@@ -17,13 +17,12 @@ namespace Bonsai.PulsePal
             : $"ConfigureTrigger{Channel}";
 
         /// <summary>
-        /// Gets or sets the name of the serial port used to communicate with the
-        /// Pulse Pal device.
+        /// Gets or sets the name of the Pulse Pal device.
         /// </summary>
         [Category(ChannelCategory)]
-        [TypeConverter(typeof(PortNameConverter))]
-        [Description("The name of the serial port used to communicate with the Pulse Pal device.")]
-        public string PortName { get; set; }
+        [TypeConverter(typeof(DeviceNameConverter))]
+        [Description("The name of the Pulse Pal device.")]
+        public string DeviceName { get; set; }
 
         /// <summary>
         /// Gets or sets the output channel to configure.
@@ -59,7 +58,7 @@ namespace Bonsai.PulsePal
         public override IObservable<TSource> Process<TSource>(IObservable<TSource> source)
         {
             return Observable.Using(
-                () => PulsePalManager.ReserveConnection(PortName),
+                () => PulsePalManager.ReserveConnection(DeviceName),
                 connection => source.Do(input =>
                 {
                     lock (connection.PulsePal)
