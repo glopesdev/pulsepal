@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 
 namespace Bonsai.PulsePal
 {
@@ -6,6 +7,7 @@ namespace Bonsai.PulsePal
     /// Represents pulse train configuration parameters for an output channel on a
     /// Pulse Pal device.
     /// </summary>
+    [TypeConverter(typeof(OutputChannelConfigurationConverter))]
     public class OutputChannelConfiguration : OutputChannelParameterConfiguration
     {
         const string VoltageCategory = "Pulse Voltage";
@@ -50,6 +52,17 @@ namespace Bonsai.PulsePal
         [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
         [Description("The resting voltage.")]
         public double RestingVoltage { get; set; }
+
+        /// <summary>
+        /// Gets or sets the delay to start the pulse train, in the range
+        /// [0.0001, 3600] seconds.
+        /// </summary>
+        [Category(TimingCategory)]
+        [Range(MinTimePeriod, MaxTimePeriod)]
+        [Precision(TimeDecimalPlaces, MinTimePeriod)]
+        [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
+        [Description("The delay to start the pulse train, in seconds.")]
+        public double PulseTrainDelay { get; set; } = MinTimePeriod;
 
         /// <summary>
         /// Gets or sets the duration of the first phase of the pulse, in the range
@@ -128,17 +141,6 @@ namespace Bonsai.PulsePal
         public double PulseTrainDuration { get; set; } = MinTimePeriod;
 
         /// <summary>
-        /// Gets or sets the delay to start the pulse train, in the range
-        /// [0.0001, 3600] seconds.
-        /// </summary>
-        [Category(TimingCategory)]
-        [Range(MinTimePeriod, MaxTimePeriod)]
-        [Precision(TimeDecimalPlaces, MinTimePeriod)]
-        [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
-        [Description("The delay to start the pulse train, in seconds.")]
-        public double PulseTrainDelay { get; set; } = MinTimePeriod;
-
-        /// <summary>
         /// Gets or sets a value specifying the identity of the custom pulse train
         /// to use on this output channel.
         /// </summary>
@@ -193,6 +195,7 @@ namespace Bonsai.PulsePal
             pulsePal.SetBiphasic(channel, Biphasic);
             pulsePal.SetPhase1Voltage(channel, Phase1Voltage);
             pulsePal.SetPhase2Voltage(channel, Phase2Voltage);
+            pulsePal.SetPulseTrainDelay(channel, PulseTrainDelay);
             pulsePal.SetPhase1Duration(channel, Phase1Duration);
             pulsePal.SetInterPhaseInterval(channel, InterPhaseInterval);
             pulsePal.SetPhase2Duration(channel, Phase2Duration);
@@ -200,7 +203,6 @@ namespace Bonsai.PulsePal
             pulsePal.SetBurstDuration(channel, BurstDuration);
             pulsePal.SetInterBurstInterval(channel, InterBurstInterval);
             pulsePal.SetPulseTrainDuration(channel, PulseTrainDuration);
-            pulsePal.SetPulseTrainDelay(channel, PulseTrainDelay);
             pulsePal.SetTriggerOnChannel1(channel, TriggerOnChannel1);
             pulsePal.SetTriggerOnChannel2(channel, TriggerOnChannel2);
             pulsePal.SetCustomTrainIdentity(channel, CustomTrainIdentity);
@@ -214,6 +216,25 @@ namespace Bonsai.PulsePal
         public override string ToString()
         {
             return Channel == 0 ? nameof(OutputChannelConfiguration) : $"{Channel}";
+        }
+
+        class OutputChannelConfigurationConverter : ExpandableObjectConverter
+        {
+            public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
+            {
+                return base.GetProperties(context, value, attributes)
+                           .Sort(new[]
+                           {
+                               nameof(PulseTrainDelay),
+                               nameof(Phase1Duration),
+                               nameof(InterPhaseInterval),
+                               nameof(Phase2Duration),
+                               nameof(InterPulseInterval),
+                               nameof(BurstDuration),
+                               nameof(InterBurstInterval),
+                               nameof(PulseTrainDuration)
+                           });
+            }
         }
     }
 }
