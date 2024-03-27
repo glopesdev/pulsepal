@@ -1,2 +1,5 @@
-- name: Getting Started
-  href: intro.md
+- href: ../index.md
+- href: programming-pulse-trains.md
+- href: custom-pulse-trains.md
+- href: trigger-output.md
+- href: update-display.md
