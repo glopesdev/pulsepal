@@ -4,4 +4,3 @@ The [`UpdateDisplay`](xref:Bonsai.PulsePal.UpdateDisplay) operator can be used t
 :::workflow
 ![Update Pulse Pal Display](../workflows/update-display.bonsai)
 :::
-

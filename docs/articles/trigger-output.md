@@ -33,9 +33,3 @@ A constant, fixed voltage can also be set immediately on any output channel by u
 :::workflow
 ![Set Fixed Voltage](../workflows/set-fixed-voltage.bonsai)
 :::
-
-
-
-
-
-

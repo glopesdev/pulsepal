@@ -25,5 +25,3 @@ In addition to the initial configuration that can be set when creating the Pulse
 
 > [!WARNING]
 > If the [`CreatePulsePal`](xref:Bonsai.PulsePal.CreatePulsePal) operator is set as an input to these operators, the `DeviceName` property is ignored.
-
-
